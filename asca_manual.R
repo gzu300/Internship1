@@ -39,25 +39,29 @@ permutate_x_times <- function(mx,R){
   return(sum_distri)
 }
 
-design.a <- function(){
-  load('Example.RData')
-  rm(data.example)
+design.a <- function(Designa){
   design.a <- as.matrix(Designa[1:32,])
   return(design.a)
 }
 
-design.b <- function(){
-  load('Example.RData')
-  rm(data.example)
+design.b <- function(Designb){
   design.b <- as.matrix(Designb[1:32,])
   return(design.b)
 }
 
-create_Xa <- function(){
+design.ab <- function(design.a){
+  chunk <- design.a[1:16,]
+  blank <- matrix(0,32,8)
+  blank[1:16,1:4] <- blank[1:16,1:4]+chunk
+  blank[17:32,5:8] <- blank[17:32,5:8]+chunk
+  return(blank)
+}
+
+create_Xa <- function(Designa){
   #14/11/18
   #rows: time factors. 4 levels. 2 treatments, 4 replicates
   #columns: Number of genes:100
-  design.a <- design.a()
+  design.a <- design.a(Designa)
   mx <- matrix(c(rnorm(100, -3, 1), rnorm(100,-1,1),rnorm(100,1,1),rnorm(100, 3, 1)), nrow = 4, ncol = 100, byrow = T)
   #mean center the data
   mx <- as.matrix(scale(mx, scale = F))
@@ -66,7 +70,7 @@ create_Xa <- function(){
   return(xa)
 }
 
-create_Xb <- function(){
+create_Xb <- function(Designb){
   ##14/11/18
   #rows:treatments
   #columns: genes
@@ -86,10 +90,8 @@ create_Xb <- function(){
   #mean center
   mx <- scale(mx,scale = F)
   #mx[,2] <- mx[,2]+abn_extra2
-  load('Example.RData')
-  rm(data.example)
   #broadcast to 32x100
-  design.b <- design.b()
+  design.b <- design.b(Designb)
   xb <- design.b%*%mx
   return(xb)
   # abn2 <- matrix(c(rnorm(300, 5, 1), rnorm(200, -2, 1)), nrow = 50, ncol = 10, byrow = TRUE)
@@ -116,22 +118,20 @@ create_Xb <- function(){
   # mx[,2] <- abn_extra2
 }
 
-create_Xab <- function(){
+create_Xab <- function(Designa){
   #design matrix for interaction term
   #rows: interaction Xij. 8 rows
   #columns 100 columns
   design.ab <- matrix(0,nrow = 32, ncol = 8)
-  load('Example.RData')
-  rm(data.example)
   design.ab[1:16,1:4] <- design.ab[1:16,1:4]+Designa[1:16]
   design.ab[17:32,5:8] <- design.ab[17:32,5:8]+Designa[1:16]
   #8x100
   mx <- matrix(rnowm(800,0,1),nrow = 8,ncol = 100)
 }
 
-generate_dataset <- function(){
-  a <- create_Xa()
-  b <- create_Xb()
+generate_dataset <- function(Designa, Designb){
+  a <- create_Xa(Designa)
+  b <- create_Xb(Designb)
   mx <- a+b
   return(mx)
 }
