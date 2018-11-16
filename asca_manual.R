@@ -80,7 +80,8 @@ design.b <- function(Designb){
   return(design.b)
 }
 
-design.ab <- function(design.a){
+design.ab <- function(Designa){
+  design.a <- as.matrix(Designa[1:32,])
   chunk <- design.a[1:16,]
   blank <- matrix(0,32,8)
   blank[1:16,1:4] <- blank[1:16,1:4]+chunk
@@ -130,17 +131,23 @@ create_Xb <- function(Designb){
 create_Xab <- function(Designa){
   #design matrix for interaction term
   #rows: interaction Xij. 8 rows
-  #columns 100 columns
-  design.ab <- matrix(0,nrow = 32, ncol = 8)
-  design.ab[1:16,1:4] <- design.ab[1:16,1:4]+Designa[1:16]
-  design.ab[17:32,5:8] <- design.ab[17:32,5:8]+Designa[1:16]
+  #columns 100
   #8x100
-  mx <- matrix(rnowm(800,0,1),nrow = 8,ncol = 100)
+  mx <- matrix(rnorm(800,0,0),nrow = 8,ncol = 100)
+  abn1 <- matrix(c(0,0,0,2,3,4,2,1),8,20)
+  abn2 <- matrix(seq(4.5,1,by = -0.5),8,20)
+  mx[,1:20] <- mx[,1:20]+abn1
+  mx[,21:40] <- mx[,21:40]+abn2
+  mx <- scale(mx,scale = F)
+  design.ab <- design.ab(Designa)
+  Xab <- design.ab%*%mx
+  return(Xab)
 }
 
 generate_dataset <- function(Designa, Designb){
   a <- create_Xa(Designa)
   b <- create_Xb(Designb)
-  mx <- a+b
+  ab <- create_Xab(Designa)
+  mx <- a+b+ab
   return(mx)
 }
