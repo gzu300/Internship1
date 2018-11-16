@@ -3,6 +3,7 @@
 # permutate, calcualte_levergeSPE, and permutate_x_times modules created
 ###
 
+library(tidyverse)
 
 permutate <- function(mx_raw){
   #rows are samples;columns are variables
@@ -12,7 +13,33 @@ permutate <- function(mx_raw){
   return(m.output)
 }
 
-calculate_leverageSPE <- function(mx, pcs=2){
+permutate_x_times <- function(mx,R,matrix.a,matrix.b){
+  #16/11 change from rbind to cbind to make quantile calculation easier. this is bullshit. add tags for each
+  #gene is easier
+  #2007 anova-gene calculates overall 99%quantile of a gene's 99% quantile leverage
+  #permutate->split(xa,xb,xab)->pca->leverage_spe
+  #mx:NxM. M sample, N genes
+  for (r in 1:R){
+    data <- permutate(mx)#NxM
+    X.. <- mean(data)
+    Xa <- ((data%*%matrix.a)/(nrow(matrix.a)/ncol(matrix.a)))%*%t(matrix.a)-X..#NxM
+    Xb <- ((data%*%matrix.b)/(nrow(matrix.b)/ncol(matrix.b)))%*%t(matrix.b)-X..
+    Xab <- data-Xa-Xb+X..
+    each_distri <- calculate_leverageSPE(t(Xb+Xab))#MxN
+    if (r==1){
+      sum_distri <- each_distri
+      #print(r)
+    }
+    else{
+      sum_distri <- rbind(sum_distri, each_distri)
+    }
+  }
+  return(sum_distri)
+}
+
+calculate_leverageSPE <- function(mx, pcs=1){
+  #16/11/18 naming of the columns are not important anymore due to rbind to cbind
+  #mx is MxN. M sample. N genes
   pca.model <- prcomp(mx, center = T, scale. = F)
   loadings <- pca.model$rotation[,1:pcs]
   scores <- pca.model$x[,1:pcs]
@@ -21,22 +48,26 @@ calculate_leverageSPE <- function(mx, pcs=2){
   resi <- mx-(scores%*%t(loadings))
   SPE <- diag(t(resi)%*%resi)
   df$SPE <- SPE
+  df$gene <- c(1:ncol(mx))
   return(df)
 }
 
-permutate_x_times <- function(mx,R){
-  for (r in 1:R){
-    m.output <- permutate(mx)
-    each_distri <- calculate_leverageSPE(m.output)
-    if (r==1){
-      sum_distri <- each_distri
-      print(r)
-    }
-    else{
-      sum_distri <- rbind(sum_distri, each_distri)
-    }
-  }
-  return(sum_distri)
+leverage_lim <- function(permutated.data){
+  #16/11/18 rows are different genes. columns are different permutations
+  quant_per_gene <- permutated.data %>% 
+    group_by(gene) %>% 
+    summarise(cutoff.per_gene = quantile(leverage, probs = 0.95))
+  limit <- quantile(quant_per_gene$cutoff.per_gene,probs = 0.95)
+  return(limit)
+}
+
+spe_lim <- function(permutated.data){
+  m <- mean(permutated.data$SPE)
+  v <- var(permutated.data$SPE)
+  h <- 2*m*m/v
+  g <- v/(2*m)
+  limit <- g*qchisq(p = 0.95,df = h)
+  return(limit)
 }
 
 design.a <- function(Designa){
@@ -62,7 +93,7 @@ create_Xa <- function(Designa){
   #rows: time factors. 4 levels. 2 treatments, 4 replicates
   #columns: Number of genes:100
   design.a <- design.a(Designa)
-  mx <- matrix(c(rnorm(100, -3, 1), rnorm(100,-1,1),rnorm(100,1,1),rnorm(100, 3, 1)), nrow = 4, ncol = 100, byrow = T)
+  mx <- matrix(c(rnorm(100, -3, 0), rnorm(100,-1,0),rnorm(100,1,0),rnorm(100, 3, 0)), nrow = 4, ncol = 100, byrow = T)
   #mean center the data
   mx <- as.matrix(scale(mx, scale = F))
   #broadcast to 32X100
@@ -79,10 +110,10 @@ create_Xb <- function(Designb){
   #gene 26-50 decrease
   #gene 1 extra increase
   #base noise
-  mx <- matrix(rnorm(200, 0, 1),nrow = 2, ncol = 100)
+  mx <- matrix(rnorm(200, 0, 0),nrow = 2, ncol = 100)
   #patterns
-  abn1 <- matrix(rnorm(25, 2, 1), nrow = 1, ncol = 25)#induction pattern 1:25
-  abn2 <- matrix(rnorm(25,-1,1),nrow = 1,ncol = 25)#reduction pattern 26-50
+  abn1 <- matrix(rnorm(25, 2, 0), nrow = 1, ncol = 25)#induction pattern 1:25
+  abn2 <- matrix(rnorm(25,-1,0),nrow = 1,ncol = 25)#reduction pattern 26-50
   abn_extra1 <- 2#add extra noise
   mx[2,1:25] <- mx[2,1:25]+abn1
   mx[2,26:50] <- mx[2,26:50]+abn2
@@ -94,28 +125,6 @@ create_Xb <- function(Designb){
   design.b <- design.b(Designb)
   xb <- design.b%*%mx
   return(xb)
-  # abn2 <- matrix(c(rnorm(300, 5, 1), rnorm(200, -2, 1)), nrow = 50, ncol = 10, byrow = TRUE)
-  # abn3 <- matrix(rnorm(1000, 5, 1), nrow = 50, ncol = 20)
-  # 
-  # group1 <- mx[1:50,1:20]
-  # group2 <- mx[51:100, 21:30]
-  # group3 <- mx[101:150, 31:50]
-  # groups <- c(rep('g4',2),
-  #             rep('g1', ncol(group1)-2),
-  #             rep('g2', ncol(group2)),
-  #             rep('g3', ncol(group3)),
-  #             rep('ref', 40))
-  # 
-  # treatments <- c(rep('t1', nrow(group1)),
-  #                 rep('t2', nrow(group2)),
-  #                 rep('t3', nrow(group3)),
-  #                 rep('ref', 50))
-  # 
-  # mx[1:50,1:20] <- group1+abn1
-  # mx[51:100, 21:30] <- group2+abn2
-  # mx[101:150, 31:50] <- group3+abn3
-  # mx[,1] <- mx[,1]+abn_extra1
-  # mx[,2] <- abn_extra2
 }
 
 create_Xab <- function(Designa){
