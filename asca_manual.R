@@ -133,11 +133,11 @@ create_Xab <- function(Designa){
   #rows: interaction Xij. 8 rows
   #columns 100
   #8x100
-  mx <- matrix(rnorm(800,0,0),nrow = 8,ncol = 100)
-  abn1 <- matrix(c(0,0,0,2,3,4,2,1),8,20)
-  abn2 <- matrix(seq(4.5,1,by = -0.5),8,20)
-  mx[,1:20] <- mx[,1:20]+abn1
-  mx[,21:40] <- mx[,21:40]+abn2
+  mx <- matrix(rnorm(8*77,0,0),nrow = 8,ncol = 77)
+  abn1 <- matrix(c(0,0,0,0,1,2,3,4),8,10)
+  abn2 <- matrix(c(4,3,2,1,0,0,0,0),8,10)
+  abn3 <- matrix(c(1,2,1,1,0,0,0,0),8,3)
+  mx <- cbind(abn1,abn2,abn3,mx)
   mx <- scale(mx,scale = F)
   design.ab <- design.ab(Designa)
   Xab <- design.ab%*%mx
