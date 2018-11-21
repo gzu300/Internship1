@@ -7,13 +7,13 @@ library(tidyverse)
 
 permutate <- function(mx_raw){
   #rows are samples;columns are variables
-  m <- nrow(mx_raw)
+  m <- ncol(mx_raw)
   places <- sample(1:m)
-  m.output <- mx_raw[places,]
+  m.output <- mx_raw[,places]
   return(m.output)
 }
 
-permutate_x_times <- function(mx,R,matrix.a,matrix.b){
+permutate_x_times <- function(mx,R,matrix.a,matrix.b,matrix.ab){
   #16/11 change from rbind to cbind to make quantile calculation easier. this is bullshit. add tags for each
   #gene is easier
   #2007 anova-gene calculates overall 99%quantile of a gene's 99% quantile leverage
@@ -21,10 +21,10 @@ permutate_x_times <- function(mx,R,matrix.a,matrix.b){
   #mx:NxM. M sample, N genes
   for (r in 1:R){
     data <- permutate(mx)#NxM
-    X.. <- mean(data)
+    X.. <- apply(data,1,mean)
     Xa <- ((data%*%matrix.a)/(nrow(matrix.a)/ncol(matrix.a)))%*%t(matrix.a)-X..#NxM
     Xb <- ((data%*%matrix.b)/(nrow(matrix.b)/ncol(matrix.b)))%*%t(matrix.b)-X..
-    Xab <- data-Xa-Xb+X..
+    Xab <- ((data%*%matrix.ab)/(nrow(matrix.ab)/ncol(matrix.ab)))%*%t(matrix.ab)-Xa-Xb+X..
     each_distri <- calculate_leverageSPE(t(Xb+Xab))#MxN
     if (r==1){
       sum_distri <- each_distri
@@ -37,7 +37,7 @@ permutate_x_times <- function(mx,R,matrix.a,matrix.b){
   return(sum_distri)
 }
 
-calculate_leverageSPE <- function(mx, pcs=1){
+calculate_leverageSPE <- function(mx, pcs=2){
   #16/11/18 naming of the columns are not important anymore due to rbind to cbind
   #mx is MxN. M sample. N genes
   pca.model <- prcomp(mx, center = T, scale. = F)
@@ -69,7 +69,7 @@ spe_lim <- function(permutated.data){
   limit <- g*qchisq(p = 0.95,df = h)
   return(limit)
 }
-
+######################################################
 design.a <- function(Designa){
   design.a <- as.matrix(Designa[1:32,])
   return(design.a)
@@ -98,8 +98,8 @@ create_Xa <- function(Designa){
   #mean center the data
   mx <- as.matrix(scale(mx, scale = F))
   #broadcast to 32X100
-  xa <- design.a%*%mx
-  return(xa)
+  a <- design.a%*%mx
+  return(a)
 }
 
 create_Xb <- function(Designb){
@@ -111,21 +111,21 @@ create_Xb <- function(Designb){
   #gene 26-50 decrease
   #gene 1 extra increase
   #base noise
-  mx <- matrix(rnorm(200, 0, 0),nrow = 2, ncol = 100)
+  mx <- matrix(rnorm(200, 0, 1),nrow = 2, ncol = 100)
   #patterns
   abn1 <- matrix(rnorm(25, 2, 0), nrow = 1, ncol = 25)#induction pattern 1:25
   abn2 <- matrix(rnorm(25,-1,0),nrow = 1,ncol = 25)#reduction pattern 26-50
   abn_extra1 <- 2#add extra noise
   mx[2,1:25] <- mx[2,1:25]+abn1
   mx[2,26:50] <- mx[2,26:50]+abn2
-  mx[2,1] <- mx[2,1]+abn_extra1
+  #mx[2,1] <- mx[2,1]+abn_extra1
   #mean center
   mx <- scale(mx,scale = F)
   #mx[,2] <- mx[,2]+abn_extra2
   #broadcast to 32x100
   design.b <- design.b(Designb)
-  xb <- design.b%*%mx
-  return(xb)
+  b <- design.b%*%mx
+  return(b)
 }
 
 create_Xab <- function(Designa){
@@ -134,20 +134,21 @@ create_Xab <- function(Designa){
   #columns 100
   #8x100
   mx <- matrix(rnorm(8*77,0,0),nrow = 8,ncol = 77)
-  abn1 <- matrix(c(0,0,0,0,1,2,3,4),8,10)
-  abn2 <- matrix(c(4,3,2,1,0,0,0,0),8,10)
-  abn3 <- matrix(c(1,2,1,1,0,0,0,0),8,3)
+  abn1 <- matrix(c(-2,-1,1,2,2,1,-1,-2),8,10)
+  abn2 <- matrix(c(0,0,0,0,0,0,0,0),8,10)
+  abn3 <- matrix(c(-1,3,-1,-1,1,-3,1,1),8,3)
   mx <- cbind(abn1,abn2,abn3,mx)
   mx <- scale(mx,scale = F)
   design.ab <- design.ab(Designa)
-  Xab <- design.ab%*%mx
-  return(Xab)
+  ab <- design.ab%*%mx
+  return(ab)
 }
 
-generate_dataset <- function(Designa, Designb){
+generate_dataset <- function(Designa, Designb, X..=0){
   a <- create_Xa(Designa)
   b <- create_Xb(Designb)
   ab <- create_Xab(Designa)
   mx <- a+b+ab
+  #mx <- scale(mx,scale = F)
   return(mx)
 }
