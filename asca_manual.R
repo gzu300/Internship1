@@ -111,10 +111,10 @@ create_Xb <- function(Designb){
   #gene 26-50 decrease
   #gene 1 extra increase
   #base noise
-  mx <- matrix(rnorm(200, 0, 1),nrow = 2, ncol = 100)
+  mx <- matrix(rnorm(200, 0, 0),nrow = 2, ncol = 100)
   #patterns
   abn1 <- matrix(rnorm(25, 2, 0), nrow = 1, ncol = 25)#induction pattern 1:25
-  abn2 <- matrix(rnorm(25,-1,0),nrow = 1,ncol = 25)#reduction pattern 26-50
+  abn2 <- matrix(rnorm(25,-2,0),nrow = 1,ncol = 25)#reduction pattern 26-50
   abn_extra1 <- 2#add extra noise
   mx[2,1:25] <- mx[2,1:25]+abn1
   mx[2,26:50] <- mx[2,26:50]+abn2
