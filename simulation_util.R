@@ -90,3 +90,25 @@ pipeline.raw <- function(v, i, j, r){
   #df_final <- t(df_)
   return(df_final)
 }
+
+####################
+#asca design matrix#
+####################
+
+asca.design.matrix <- function(i,j,r){
+  rows <- i*j*r
+  blank <- vector(mode = 'list')
+  for (col in c(i,j,i*j)){#iterate through different number of design matrix's columns
+    mx <- matrix(0,nrow=rows, ncol=col)
+    blank <- c(blank,list(mx)) 
+  }
+  #output <- list(blank[[1]]+c(rep(rep(1,j*r),rep(0,j*r*1),1),rep(0,j*r)))
+  output <- list(blank[[1]]+c(rep(1,j*r),rep(0,j*r*1),rep(0,j*r)))
+  output <- c(output,list(blank[[2]]+c(rep(c(rep(1,r),rep(0,r*3)),2),rep(0,r))))
+  output <- c(output,list(blank[[3]]+c(rep(1,r),rep(0,r*7),rep(0,r))))
+  output
+}
+
+a <- asca.design.matrix(2,4,4)
+a[[3]]
+a <- design_exp(2,4,4)
