@@ -111,7 +111,32 @@ pipeline.raw <- function(v, i, j, r){
 }
 
 ####################
-#asca design matrix#
+#data generation#
 ####################
-
+#### GENERATE TIME COURSE DATA
+## generate n random gene expression profiles of a data set with 
+## one control plus 3 treatments, 3 time points and r replicates per time point.
+##r replicates
+##
+tc.GENE <- function(n, r,
+                    var11 = 0.01, var12 = 0.01,var13 = 0.01,
+                    var21 = 0.01, var22 = 0.01, var23 =0.01,
+                    var31 = 0.01, var32 = 0.01, var33 = 0.01,
+                    var41 = 0.01, var42 = 0.01, var43 = 0.01,
+                    a1 = 0, a2 = 0, a3 = 0, a4 = 0,
+                    b1 = 0, b2 = 0, b3 = 0, b4 = 0,
+                    c1 = 0, c2 = 0, c3 = 0, c4 = 0)
+{
+  
+  tc.dat <- NULL
+  for (i in 1:n) {
+    Ctl <- c(rnorm(r, a1, var11), rnorm(r, b1, var12), rnorm(r, c1, var13))  # Ctl group
+    Tr1 <- c(rnorm(r, a2, var21), rnorm(r, b2, var22), rnorm(r, c2, var23))  # Tr1 group
+    Tr2 <- c(rnorm(r, a3, var31), rnorm(r, b3, var32), rnorm(r, c3, var33))  # Tr2 group
+    Tr3 <- c(rnorm(r, a4, var41), rnorm(r, b4, var42), rnorm(r, c4, var43))  # Tr3 group
+    gene <- c(Ctl, Tr1, Tr2, Tr3)
+    tc.dat <- rbind(tc.dat, gene)
+  }
+  tc.dat
+}
 

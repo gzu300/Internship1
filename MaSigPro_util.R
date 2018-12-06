@@ -58,7 +58,7 @@ design_exp <- function(i, j, r,time){
 design_matrix <- function(i, j, r, time){
   time.col <- rep(time, each=r)
   replicate.col <-  rep(1:(i*j), each = r)
-  group <- c(paste('G', c(1:i), sep = ''))
+  group <- c('control',paste('treatment', c(2:i), sep = ''))
   dummy.groups <- create_dummy(i, j, r)
   design.matrix <- data.frame(time=time.col, replicate=replicate.col, dummy.groups)
   colnames(design.matrix) <- noquote(c('Time', 'Replicate', group))
