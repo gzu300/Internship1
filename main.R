@@ -2,6 +2,7 @@
 ######
 #simulation data
 ######
+library(tidyverse)
 source('simulation_util.R')
 source('MaSigPro_util.R')
 source('ASCA-genes.1.2.1/sourceASCA.R')
@@ -70,7 +71,7 @@ small <- tc.GENE(1,4,a1=y1[1],b1=y1[2],c1=y1[3],d1=y1[4],e1=y1[5],
                  a4=y2[1],b4=y2[2],c4=y2[3],d4=y2[4],e4=y2[5])
 flat <- tc.GENE(100,4)
 df.final <- rbind(onediff,twodiff.2way,difftime,small,flat)
-rownames(df.final) <- c(paste('onediff',c(1:10)),paste('twodiff1',c(1:10)),paste('difftime',c(1:10)),'small',paste('flat',1:100))
+rownames(df.final) <- c(paste('met1-10',c(1:10)),paste('met11-20',c(1:10)),paste('met21-30',c(1:10)),'met31',paste('flat',1:100))
 
 #####################masigpro#############
 
@@ -92,12 +93,21 @@ toplot <- rownames(masigpro.fit$sig.genes$treatment2vscontrol$sig.profiles)
 #######
 #plot
 ######
-see.genes(masigpro.fit$sig.genes$treatment2vscontrol,show.fit = T,dis = edesign,k = 4)
+see.genes(masigpro.fit$sig.genes$treatment1vscontrol,show.fit = T,dis = edesign,k = 4)
 for (each in c(toplot)){
   PlotGroups(df.final[rownames(df.final)==each,],edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector)
 }
-AA <- df.final["twodiff1 1",]
-PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector)
+AA <- df.final["met1-10 1",]
+PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,sub = 'Regression model of one variable')
+trend.toplot <- data.frame(replicate=rep(1:20,each=4),time=rep(c(0,2,6,10,24),each=4),treatment=rep(c('control','treatment1','treatment2','treatment3'),each=20),'metabolite1-10'=df.final[1,],'metabolite11-20'=df.final[11,],'metabolite21-30'=df.final[21,],'metabolite31'=df.final[31,])
+ggplot(trend.toplot,aes(x=time,y=metabolite1.10,color=treatment))+
+  geom_point()
+ggplot(trend.toplot,aes(x=time,y=metabolite11.20,color=treatment))+
+  geom_point()
+ggplot(trend.toplot,aes(x=time,y=metabolite21.30,color=treatment))+
+  geom_point()
+ggplot(trend.toplot,aes(x=time,y=metabolite31,color=treatment))+
+  geom_point()
 #######################asca-gene#############
 
 ######
@@ -114,19 +124,29 @@ asca.fit <- ASCA.2f(X = t(df.final),Designa = mx.j, Designb = mx.i,type = 1, Fac
 ######
 #plot
 ######
+#leveragevsspe
 lev.lim <- leverage.lims(df.final,R=10,FUN = ASCA.2f,Designa = mx.j, Designb = mx.i,Fac = c(2,2,2,2),type = 1,alpha = 0.05)$Cutoff[[2]]
 spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.05)[[2]]
 leverage <- asca.fit$Model.bab$leverage
 spe <- asca.fit$Model.bab$SPE
 lev.spe.toplot <- data.frame(leverage=leverage,spe=spe)
 lev.spe.toplot$metabolites <- rownames(df.final)
-lev.spe.toplot$label <- c(rep('onediff',10),rep('twodiff',20),rep('small',1),rep('flat',100))
+lev.spe.toplot$label <- c(rep('metabolite1-10',10),rep('metabolite11-20',10),rep('metabolite21-30',10),rep('metabolite31',1),rep('flat',100))
 
 ggplot(data = lev.spe.toplot,aes(x=leverage,y=spe,color=label))+
   geom_point()+
   geom_hline(yintercept = spe.lim)+
   geom_vline(xintercept = lev.lim)
-
+#score plot
 bab.toplot <- data.frame(score=asca.fit$Model.bab$scores,time=rep(time,4),treatments=rep(c('ctrl','treat1','treat2','treat3'),each=5))
-ggplot(data = bab.toplot,aes(x=time,y=score.2,color=treatments))+
+ggplot(data = bab.toplot,aes(x=time,y=score.1))+
   geom_line()
+#loading plot
+bab.loading <- as.data.frame(asca.fit$Model.bab$loadings)
+colnames(bab.loading) <- c('PC1','PC2')
+bab.loading.toplot <- bab.loading %>% 
+  gather('PCs','Loading',1:2)
+bab.loading.toplot$metabolites <- rep(1:131,2)
+ggplot(bab.loading.toplot,aes(x=metabolites,y=Loading,fill=PCs))+
+  geom_bar(stat = 'identity',position = 'dodge')
+       
