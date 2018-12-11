@@ -2,76 +2,71 @@
 ######
 #simulation data
 ######
+setwd('~/Desktop/Internship1/')
 library(tidyverse)
-source('simulation_util.R')
+#source('simulation_util.R')
 source('MaSigPro_util.R')
 source('ASCA-genes.1.2.1/sourceASCA.R')
-setwd('../')
-i=4#treatment
-j=5#time
-r=4#replicate
-time=c(0,2,6,10,24)#time points
-y1 <- 0.05*time-0.005*time^2
-y1.t <- y1+4
-y1.t1 <- y1+3
-y2 <- -0.05*time+0.005*time^2
-y2.t <- y2-1
-y3 <- 0.05*time
-y3.t <- y3-2
 
-#total of 100 metabolites(columns)
-#total of 2*5*4=40 rows
 
 ######
 #generate data
 ######
-tc.GENE <- function(n, r,
-                    var11 = 0.2, var12 = 0.2, var13 = 0.2,var14 = 0.2,var15 = 0.2,
-                    var21 = 0.2, var22 = 0.2, var23 = 0.2,var24 = 0.2,var25 = 0.2,
-                    var31 = 0.2, var32 = 0.2, var33 = 0.2,var34 = 0.2,var35 = 0.2,
-                    var41 = 0.2, var42 = 0.2, var43 = 0.2,var44 = 0.2,var45 = 0.2,
-                    #var51 = 0.01, var52 = 0.01, var53 = 0.01,var54 = 0.01,var55 = 0.01,
-                    a1 = 0, a2 = 0, a3 = 0, a4 = 0,
-                    b1 = 0, b2 = 0, b3 = 0, b4 = 0,
-                    c1 = 0, c2 = 0, c3 = 0, c4 = 0,
-                    d1 = 0, d2 = 0, d3 = 0, d4 = 0,
-                    e1 = 0, e2 = 0, e3 = 0, e4 = 0)
-{
-  
-  tc.dat <- NULL
-  for (i in 1:n) {
-    Ctl <- c(rnorm(r, a1, var11), rnorm(r, b1, var12), rnorm(r, c1, var13),rnorm(r, d1, var14),rnorm(r, e1, var15))  # Ctl group
-    Tr1 <- c(rnorm(r, a2, var21), rnorm(r, b2, var22), rnorm(r, c2, var23),rnorm(r, d2, var24),rnorm(r, e2, var25))  # Tr1 group
-    Tr2 <- c(rnorm(r, a3, var31), rnorm(r, b3, var32), rnorm(r, c3, var33),rnorm(r, d3, var34),rnorm(r, e3, var35))  # Tr2 group
-    Tr3 <- c(rnorm(r, a4, var41), rnorm(r, b4, var42), rnorm(r, c4, var43),rnorm(r, d4, var44),rnorm(r, e4, var45))  # Tr3 group
-    gene <- c(Ctl, Tr1, Tr2,Tr3)
-    tc.dat <- rbind(tc.dat, gene)
+generate_data <- function(){
+  tc.GENE <- function(n, r,
+                      var11 = 0.2, var12 = 0.2, var13 = 0.2,var14 = 0.2,var15 = 0.2,
+                      var21 = 0.2, var22 = 0.2, var23 = 0.2,var24 = 0.2,var25 = 0.2,
+                      var31 = 0.2, var32 = 0.2, var33 = 0.2,var34 = 0.2,var35 = 0.2,
+                      var41 = 0.2, var42 = 0.2, var43 = 0.2,var44 = 0.2,var45 = 0.2,
+                      #var51 = 0.01, var52 = 0.01, var53 = 0.01,var54 = 0.01,var55 = 0.01,
+                      a1 = 0, a2 = 0, a3 = 0, a4 = 0,
+                      b1 = 0, b2 = 0, b3 = 0, b4 = 0,
+                      c1 = 0, c2 = 0, c3 = 0, c4 = 0,
+                      d1 = 0, d2 = 0, d3 = 0, d4 = 0,
+                      e1 = 0, e2 = 0, e3 = 0, e4 = 0)
+  {
+    
+    tc.dat <- NULL
+    for (i in 1:n) {
+      Ctl <- c(rnorm(r, a1, var11), rnorm(r, b1, var12), rnorm(r, c1, var13),rnorm(r, d1, var14),rnorm(r, e1, var15))  # Ctl group
+      Tr1 <- c(rnorm(r, a2, var21), rnorm(r, b2, var22), rnorm(r, c2, var23),rnorm(r, d2, var24),rnorm(r, e2, var25))  # Tr1 group
+      Tr2 <- c(rnorm(r, a3, var31), rnorm(r, b3, var32), rnorm(r, c3, var33),rnorm(r, d3, var34),rnorm(r, e3, var35))  # Tr2 group
+      Tr3 <- c(rnorm(r, a4, var41), rnorm(r, b4, var42), rnorm(r, c4, var43),rnorm(r, d4, var44),rnorm(r, e4, var45))  # Tr3 group
+      gene <- c(Ctl, Tr1, Tr2,Tr3)
+      tc.dat <- rbind(tc.dat, gene)
+    }
+    tc.dat
   }
-  tc.dat
+  onediff <- tc.GENE(10,4,
+                     #a1=y1[1],b1=y1[2],c1=y1[3],d1=y1[4],e1=y1[5],
+                     a2=y1.t[1],b2=y1.t[2],c2=y1.t[3],d2=y1.t[4],e2=y1.t[5],
+                     a3=2,b3=2,c3=2,d3=2,e3=2)
+  #a4=y2[1],b4=y2[2],c4=y2[3],d4=y2[4],e4=y2[5]
+  twodiff.2way <- tc.GENE(10,4,
+                          #a1=y1[1],b1=y1[2],c1=y1[3],d1=y1[4],e1=y1[5],
+                          a2=y1.t[1],b2=y1.t[2],c2=y1.t[3],d2=y1.t[4],e2=y1.t[5],
+                          #a3=y2[1],b3=y2[2],c3=y2[3],d3=y2[4],e3=y2[5],
+                          a4=y2[1],b4=y2[2],c4=y2[3],d4=y2[4],e4=y2[5])
+  difftime <- tc.GENE(10,4,
+                      #a1=y1[1],b1=y1[2],c1=y1[3],d1=y1[4],e1=y1[5],
+                      a2=0.2+y2[1],b2=0.2+y2[2],c2=0.2+y2[3],d2=0.2+y2[4],e2=0.2+y2[5],
+                      a3=0.3+y2[1],b3=0.3+y2[2],c3=0.3+y2[3],d3=0.3+y2[4],e3=0.3+y2[5],
+                      a4=0.4+y2[1],b4=0.4+y2[2],c4=0.4+y2[3],d4=0.4+y2[4],e4=0.4+y2[5],
+                      var41 = 0.2, var42 = 0.2, var43 = 0.2,var44 = 0.2,var45 = 0.2)
+  small <- tc.GENE(1,4,a1=y1[1],b1=y1[2],c1=y1[3],d1=y1[4],e1=y1[5],
+                   a2=y1[1],b2=y1[2],c2=y1[3],d2=y1[4],e2=y1[5],
+                   a3=y2[1],b3=y2[2],c3=y2[3],d3=y2[4],e3=y2[5],
+                   a4=y2[1],b4=y2[2],c4=y2[3],d4=y2[4],e4=y2[5])
+  flat <- tc.GENE(100,4)
+  df.final <- rbind(onediff,twodiff.2way,difftime,small,flat)
+  groups <- c(rep('patter in 2 and 3',10),rep('patter in 2 and 4',10),rep('patter in 2,3, and 4',10),rep('patter with single metabolite',1),rep('flat',100))
+  rownames(df.final) <- c(paste('met1-10',c(1:10)),paste('met11-20',c(1:10)),paste('met21-30',c(1:10)),'met31',paste('flat',1:100))
+  output <- vector(mode='list',length = 2)
+  names(output) <- c('df','groups')
+  output[[1]] <- df.final
+  output[[2]] <- groups
+  output
 }
-onediff <- tc.GENE(10,4,
-                   #a1=y1[1],b1=y1[2],c1=y1[3],d1=y1[4],e1=y1[5],
-                   a2=y1.t[1],b2=y1.t[2],c2=y1.t[3],d2=y1.t[4],e2=y1.t[5],
-                   a3=2,b3=2,c3=2,d3=2,e3=2)
-#a4=y2[1],b4=y2[2],c4=y2[3],d4=y2[4],e4=y2[5]
-twodiff.2way <- tc.GENE(10,4,
-                        #a1=y1[1],b1=y1[2],c1=y1[3],d1=y1[4],e1=y1[5],
-                        a2=y1.t[1],b2=y1.t[2],c2=y1.t[3],d2=y1.t[4],e2=y1.t[5],
-                        #a3=y2[1],b3=y2[2],c3=y2[3],d3=y2[4],e3=y2[5],
-                        a4=y2[1],b4=y2[2],c4=y2[3],d4=y2[4],e4=y2[5])
-difftime <- tc.GENE(10,4,
-                    #a1=y1[1],b1=y1[2],c1=y1[3],d1=y1[4],e1=y1[5],
-                    a2=0.2+y2[1],b2=0.2+y2[2],c2=0.2+y2[3],d2=0.2+y2[4],e2=0.2+y2[5],
-                    a3=0.3+y2[1],b3=0.3+y2[2],c3=0.3+y2[3],d3=0.3+y2[4],e3=0.3+y2[5],
-                    a4=0.4+y2[1],b4=0.4+y2[2],c4=0.4+y2[3],d4=0.4+y2[4],e4=0.4+y2[5],
-                    var41 = 0.2, var42 = 0.2, var43 = 0.2,var44 = 0.2,var45 = 0.2)
-small <- tc.GENE(1,4,a1=y1[1],b1=y1[2],c1=y1[3],d1=y1[4],e1=y1[5],
-                 a2=y1[1],b2=y1[2],c2=y1[3],d2=y1[4],e2=y1[5],
-                 a3=y2[1],b3=y2[2],c3=y2[3],d3=y2[4],e3=y2[5],
-                 a4=y2[1],b4=y2[2],c4=y2[3],d4=y2[4],e4=y2[5])
-flat <- tc.GENE(100,4)
-df.final <- rbind(onediff,twodiff.2way,difftime,small,flat)
-rownames(df.final) <- c(paste('met1-10',c(1:10)),paste('met11-20',c(1:10)),paste('met21-30',c(1:10)),'met31',paste('flat',1:100))
 
 #####################masigpro#############
 
@@ -79,74 +74,103 @@ rownames(df.final) <- c(paste('met1-10',c(1:10)),paste('met11-20',c(1:10)),paste
 #design matrix
 ######
 
-masigpro.design <- design_matrix(i,j,r,time)
-design <- make.design.matrix(edesign = masigpro.design,degree = 3)
-dis <- design$dis
-edesign <- design$edesign
-colnames(df.final) <- rownames(edesign)
+# masigpro.design <- design_matrix(i,j,r,time)
+# design <- make.design.matrix(edesign = masigpro.design,degree = 3)
+# dis <- design$dis
+# edesign <- design$edesign
+# colnames(df.final) <- rownames(edesign)
 
-########
-#fit model
-########
-masigpro.fit <- maSigPro(df.final,masigpro.design,degree=3,step.method = 'forward')
-toplot <- rownames(masigpro.fit$sig.genes$treatment2vscontrol$sig.profiles)
-#######
-#plot
-######
-see.genes(masigpro.fit$sig.genes$treatment1vscontrol,show.fit = T,dis = edesign,k = 4)
-for (each in c(toplot)){
-  PlotGroups(df.final[rownames(df.final)==each,],edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector)
-}
-AA <- df.final["met1-10 1",]
-PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,sub = 'Regression model of one variable')
-trend.toplot <- data.frame(replicate=rep(1:20,each=4),time=rep(c(0,2,6,10,24),each=4),treatment=rep(c('control','treatment1','treatment2','treatment3'),each=20),'metabolite1-10'=df.final[1,],'metabolite11-20'=df.final[11,],'metabolite21-30'=df.final[21,],'metabolite31'=df.final[31,])
-ggplot(trend.toplot,aes(x=time,y=metabolite1.10,color=treatment))+
-  geom_point()
-ggplot(trend.toplot,aes(x=time,y=metabolite11.20,color=treatment))+
-  geom_point()
-ggplot(trend.toplot,aes(x=time,y=metabolite21.30,color=treatment))+
-  geom_point()
-ggplot(trend.toplot,aes(x=time,y=metabolite31,color=treatment))+
-  geom_point()
+# ########
+# #fit model
+# ########
+# masigpro.fit <- maSigPro(df.final,masigpro.design,degree=3,step.method = 'forward')
+# toplot <- rownames(masigpro.fit$sig.genes$treatment2vscontrol$sig.profiles)
+# #######
+# #plot
+# ######
+# see.genes(masigpro.fit$sig.genes$treatment1vscontrol,show.fit = T,dis = edesign,k = 4)
+# for (each in c(toplot)){
+#   PlotGroups(df.final[rownames(df.final)==each,],edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector)
+# }
+# AA <- df.final["met31",]
+# PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,sub = 'Regression model of one variable')
+# trend.toplot <- data.frame(replicate=rep(1:20,each=4),time=rep(c(0,2,6,10,24),each=4),treatment=rep(c('control','treatment1','treatment2','treatment3'),each=20),'metabolite1-10'=df.final[1,],'metabolite11-20'=df.final[11,],'metabolite21-30'=df.final[21,],'metabolite31'=df.final[31,])
+# ggplot(trend.toplot,aes(x=time,y=metabolite1.10,color=treatment))+
+#   geom_point()+
+#   stat_summary(fun.y = mean,geom = 'line')
+# ggplot(trend.toplot,aes(x=time,y=metabolite11.20,color=treatment))+
+#   geom_point()
+# ggplot(trend.toplot,aes(x=time,y=metabolite21.30,color=treatment))+
+#   geom_point()
+# ggplot(trend.toplot,aes(x=time,y=metabolite31,color=treatment))+
+#   geom_point()
 #######################asca-gene#############
 
 ######
 #design matrix
 #####
-mx.i <- matrix(0,nrow = i*j*r, ncol = i, dimnames = list(c(),c('control','treatment1','treatment2','treatment3')))+c(rep(1,j*r),rep(0,i*j*r))
-mx.j <- matrix(0,nrow = i*j*r, ncol = j, dimnames = list(c(),c('T0','T2','T6','T10','T24')))+c(rep(c(rep(1,r),rep(0,j*r-r)),i),rep(0,r))
-mx.ij <- matrix(0,nrow = i*j*r, ncol = i*j, dimnames = list(c(),c(paste('inter',1:(i*j)))))+c(rep(1,r),rep(0,i*j*r))
-
+##functions
+asca.design.matrix <- function(i,j,r,time){
+  mx <- vector(mode = 'list')
+  mx[[1]] <- matrix(0,nrow = i*j*r, ncol = i, dimnames = list(c(),paste('treatment',1:i)))+c(rep(1,j*r),rep(0,i*j*r))
+  mx[[2]] <- matrix(0,nrow = i*j*r, ncol = j, dimnames = list(c(),paste('T',time)))+c(rep(c(rep(1,r),rep(0,j*r-r)),i),rep(0,r))
+  mx[[3]] <- matrix(0,nrow = i*j*r, ncol = i*j, dimnames = list(c(),c(paste('inter',1:(i*j)))))+c(rep(1,r),rep(0,i*j*r))
+  names(mx) <- c('i','j','ij')
+  mx
+}
+##
+#mx <- asca.design.matrix(i,j,r,time)
 ######
 #fit model
 ######
-asca.fit <- ASCA.2f(X = t(df.final),Designa = mx.j, Designb = mx.i,type = 1, Fac = c(1,1,2,2))
+# type=1
+# Fac=c(1,1,3,2)
+# asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
 ######
 #plot
 ######
 #leveragevsspe
-lev.lim <- leverage.lims(df.final,R=10,FUN = ASCA.2f,Designa = mx.j, Designb = mx.i,Fac = c(2,2,2,2),type = 1,alpha = 0.05)$Cutoff[[2]]
-spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.05)[[2]]
-leverage <- asca.fit$Model.bab$leverage
-spe <- asca.fit$Model.bab$SPE
-lev.spe.toplot <- data.frame(leverage=leverage,spe=spe)
-lev.spe.toplot$metabolites <- rownames(df.final)
-lev.spe.toplot$label <- c(rep('metabolite1-10',10),rep('metabolite11-20',10),rep('metabolite21-30',10),rep('metabolite31',1),rep('flat',100))
-
-ggplot(data = lev.spe.toplot,aes(x=leverage,y=spe,color=label))+
-  geom_point()+
-  geom_hline(yintercept = spe.lim)+
-  geom_vline(xintercept = lev.lim)
+plot.leverage_spe <- function(df.final,asca.fit,groups){
+  lev.lim <- leverage.lims(df.final,R=1,FUN = ASCA.2f,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
+  spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.05)[[2]]
+  leverage <- asca.fit$Model.bab$leverage
+  spe <- asca.fit$Model.bab$SPE
+  lev.spe.toplot <- data.frame(leverage=leverage,spe=spe)
+  lev.spe.toplot$metabolites <- rownames(df.final)
+  lev.spe.toplot$groups <- groups
+  
+  plot <- ggplot(data = lev.spe.toplot,aes(x=leverage,y=spe,color=groups))+
+    geom_point()+
+    geom_hline(yintercept = spe.lim)+
+    geom_vline(xintercept = lev.lim)
+  print(plot)
+  lev.spe.toplot
+}
+#plot.leverage_spe(df.final,asca.fit, groups)
 #score plot
-bab.toplot <- data.frame(score=asca.fit$Model.bab$scores,time=rep(time,4),treatments=rep(c('ctrl','treat1','treat2','treat3'),each=5))
-ggplot(data = bab.toplot,aes(x=time,y=score.1))+
-  geom_line()
-#loading plot
-bab.loading <- as.data.frame(asca.fit$Model.bab$loadings)
-colnames(bab.loading) <- c('PC1','PC2')
-bab.loading.toplot <- bab.loading %>% 
-  gather('PCs','Loading',1:2)
-bab.loading.toplot$metabolites <- rep(1:131,2)
-ggplot(bab.loading.toplot,aes(x=metabolites,y=Loading,fill=PCs))+
-  geom_bar(stat = 'identity',position = 'dodge')
-       
+plot.submodels_score <- function(asca.fit,i){
+  scores <- asca.fit$Model.bab$scores
+  PCs <- ncol(scores)
+  bab.toplot <- data.frame(scores=scores,time=rep(time,i),treatments=rep(paste('treatment',1:i),each=5))
+  for (each in 1:PCs){
+    plot <- ggplot(data = bab.toplot,aes(x=time,y=bab.toplot[[each]],color=treatments))+
+      geom_line()+
+      ylab(label = paste('PC',each))
+    print(plot)
+  }
+}
+#plot.submodels_score(asca.fit,i)
+  #loading plot
+plot.submodels_loading <- function(asca.fit,groups){
+  bab.loadings <- data.frame(loading=asca.fit$Model.bab$loadings)
+  PCs <- ncol(bab.loadings)
+  bab.loadings$metabolites <- 1:131
+  bab.loadings$groups <- groups
+  for (each in 1:PCs){
+    plot <- ggplot(bab.loadings,aes(x=metabolites,y=bab.loadings[[each]],fill=groups,color=groups))+
+      geom_bar(stat = 'identity',position = 'dodge')+
+      ylab(paste('PC',each))
+    print(plot)
+  }
+}
+# plot.submodels_loading(asca.fit,groups)
