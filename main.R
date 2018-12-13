@@ -68,6 +68,68 @@ generate_data <- function(){
   output
 }
 
+generate_data.nocorrelation <- function(){
+  #6 time points;2 treatments;4 replicates
+  #no correlation between metabolites
+  tc.GENE <- function(n, r,
+                      var11 = 0.2, var21 = 0.2, var31 = 0.2,var41 = 0.2,var51 = 0.2,
+                      var12 = 0.2, var22 = 0.2, var32 = 0.2,var42 = 0.2,var52 = 0.2,
+                      var13 = 0.2, var23 = 0.2, var33 = 0.2,var43 = 0.2,var53 = 0.2,
+                      var14 = 0.2, var24 = 0.2, var34 = 0.2,var44 = 0.2,var54 = 0.2,
+                      var15 = 0.2, var25 = 0.2, var35 = 0.2,var45 = 0.2,var55 = 0.2,
+                      var16 = 0.2, var26 = 0.2, var36 = 0.2,var46 = 0.2,var56 = 0.2,
+                      a1 = 0,      a2 = 0,      a3 = 0,     a4 = 0,
+                      b1 = 0,      b2 = 0,      b3 = 0,     b4 = 0,
+                      c1 = 0,      c2 = 0,      c3 = 0,     c4 = 0,
+                      d1 = 0,      d2 = 0,      d3 = 0,     d4 = 0,
+                      e1 = 0,      e2 = 0,      e3 = 0,     e4 = 0,
+                      f1 = 0,      f2 = 0,      f3 = 0,     f4 = 0)
+  {
+    
+    tc.dat <- NULL
+    for (i in 1:n) {
+      #Ctl <- c(rnorm(r, a1, var11), rnorm(r, b1, var12), rnorm(r, c1, var13),rnorm(r, d1, var14),rnorm(r, e1, var15))  # Ctl group
+      #Tr1 <- c(rnorm(r, a2, var21), rnorm(r, b2, var22), rnorm(r, c2, var23),rnorm(r, d2, var24),rnorm(r, e2, var25),rnorm(r,f2,var26))  # Tr1 group
+      Tr2 <- c(rnorm(r, a3, var31), rnorm(r, b3, var32), rnorm(r, c3, var33),rnorm(r, d3, var34),rnorm(r, e3, var35),rnorm(r,f3,var36))  # Tr2 group
+      Tr3 <- c(rnorm(r, a4, var41), rnorm(r, b4, var42), rnorm(r, c4, var43),rnorm(r, d4, var44),rnorm(r, e4, var45),rnorm(r, f4,var46))  # Tr3 group
+      gene <- c(Tr2, Tr3)
+      tc.dat <- rbind(tc.dat, gene)
+    }
+    tc.dat
+  }
+  one <- tc.GENE(1,4,
+                     #a1=y1[1],b1=y1[2],c1=y1[3],d1=y1[4],e1=y1[5],
+                     #a2=y1.t[1],b2=y1.t[2],c2=y1.t[3],d2=y1.t[4],e2=y1.t[5],
+                     a3=y12[1],b3=y12[2],c3=y12[3],d3=y12[4],e3=y12[5],f3=y12[6],
+                      a4=y1[1],b4=y1[2],c4=y1[3],d4=y1[4],e4=y1[5],f4=y1[6])
+  two <- tc.GENE(1,4,
+                          #a1=y1[1],b1=y1[2],c1=y1[3],d1=y1[4],e1=y1[5],
+                          #a2=y1.t[1],b2=y1.t[2],c2=y1.t[3],d2=y1.t[4],e2=y1.t[5],
+                          #a3=y2[1],b3=y2[2],c3=y2[3],d3=y2[4],e3=y2[5],
+                          a4=y2[1],b4=y2[2],c4=y2[3],d4=y2[4],e4=y2[5],f4=y2[6])
+  three <- tc.GENE(1,4,
+                      #a1=y1[1],b1=y1[2],c1=y1[3],d1=y1[4],e1=y1[5],
+                      #a2=0.2+y2[1],b2=0.2+y2[2],c2=0.2+y2[3],d2=0.2+y2[4],e2=0.2+y2[5],
+                      a3=y3[1],b3=y3[2],c3=y3[3],d3=y3[4],e3=y3[5],f3=y3[6])
+                      #,a4=y32[1],b4=y32[2],c4=y32[3],d4=y32[4],e4=y32[5],f4=y32[6])
+                      #var41 = 0.2, var42 = 0.2, var43 = 0.2,var44 = 0.2,var45 = 0.2)
+  # four <- tc.GENE(1,4,a1=y1[1],b1=y1[2],c1=y1[3],d1=y1[4],e1=y1[5],
+  #                  a2=y1[1],b2=y1[2],c2=y1[3],d2=y1[4],e2=y1[5],
+  #                  a3=y2[1],b3=y2[2],c3=y2[3],d3=y2[4],e3=y2[5],
+  #                  a4=y2[1],b4=y2[2],c4=y2[3],d4=y2[4],e4=y2[5])
+  flat <- tc.GENE(100,4)
+  df.final <- rbind(one,two,three,flat)
+  groups <- c('one','two','three'
+              ,rep('flat',100))
+  rownames(df.final) <- c('one','two','three'
+                          ,paste('flat',1:100))
+  output <- vector(mode='list',length = 2)
+  names(output) <- c('df','groups')
+  output[[1]] <- df.final
+  output[[2]] <- groups
+  output
+}
+
 #####################masigpro#############
 
 ######
@@ -142,16 +204,18 @@ plot.leverage_spe <- function(df.final,asca.fit,groups){
   plot <- ggplot(data = lev.spe.toplot,aes(x=leverage,y=spe,color=groups))+
     geom_point()+
     geom_hline(yintercept = spe.lim)+
-    geom_vline(xintercept = lev.lim)
+    geom_vline(xintercept = lev.lim)+
+    geom_text(aes(label=c(1,2,3,rep('',100)),hjust=-1.2))+
+    labs(title = paste('leverage and SPE with',ncol(asca.fit$Model.bab$scores),'PCs'))
   print(plot)
-  lev.spe.toplot
+  #lev.spe.toplot
 }
 #plot.leverage_spe(df.final,asca.fit, groups)
 #score plot
-plot.submodels_score <- function(asca.fit,i){
+plot.submodels_score <- function(asca.fit,i,j){
   scores <- asca.fit$Model.bab$scores
   PCs <- ncol(scores)
-  bab.toplot <- data.frame(scores=scores,time=rep(time,i),treatments=rep(paste('treatment',1:i),each=5))
+  bab.toplot <- data.frame(scores=scores,time=rep(time,i),treatments=rep(paste('treatment',1:i),each=j))
   for (each in 1:PCs){
     plot <- ggplot(data = bab.toplot,aes(x=time,y=bab.toplot[[each]],color=treatments))+
       geom_line()+
@@ -164,7 +228,7 @@ plot.submodels_score <- function(asca.fit,i){
 plot.submodels_loading <- function(asca.fit,groups){
   bab.loadings <- data.frame(loading=asca.fit$Model.bab$loadings)
   PCs <- ncol(bab.loadings)
-  bab.loadings$metabolites <- 1:131
+  bab.loadings$metabolites <- 1:nrow(bab.loadings)
   bab.loadings$groups <- groups
   for (each in 1:PCs){
     plot <- ggplot(bab.loadings,aes(x=metabolites,y=bab.loadings[[each]],fill=groups,color=groups))+
