@@ -1,7 +1,7 @@
 leverage.lims <- function(data = data, R = 100, FUN, Designa = Designa, Designb = Designb, Designc = NULL, Fac = c(1,2,2,2), type = 2, alpha = 0.01, showvar=FALSE, showscree=FALSE)
 {
 ## Compute ASCA model for data
-	Model <- FUN(X = t(data), Designa = Designa,Designb = Designb,Designc = Designc, Fac = Fac,type = type)
+	Model <- FUN(X = t(data), Designa = Designa,Designb = Designb,Designc = Designc, Fac = Fac,type = type,showvar=F,showscree=F)
 	n <- ncol(data)
 	lim <- Selection <- vector(mode = "list", length = length(Model)-1)
 	names(lim) <- names(Selection) <- names(Model)[1:length(lim)]
