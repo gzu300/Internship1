@@ -2,7 +2,8 @@
 ######
 #simulation data
 ######
-setwd('~/Desktop/Internship1/')
+#setwd('~/Desktop/Internship1/')
+setwd('~/../Desktop/Internship1/')
 library(tidyverse)
 #source('simulation_util.R')
 source('MaSigPro_util.R')
@@ -57,10 +58,10 @@ generate_data <- function(){
                    a2=y1[1],b2=y1[2],c2=y1[3],d2=y1[4],e2=y1[5],
                    a3=y2[1],b3=y2[2],c3=y2[3],d3=y2[4],e3=y2[5],
                    a4=y2[1],b4=y2[2],c4=y2[3],d4=y2[4],e4=y2[5])
-  flat <- tc.GENE(100,4)
+  flat <- tc.GENE(200,4)
   df.final <- rbind(onediff,twodiff.2way,difftime,small,flat)
-  groups <- c(rep('patter in 2 and 3',10),rep('patter in 2 and 4',10),rep('patter in 2,3, and 4',10),rep('patter with single metabolite',1),rep('flat',100))
-  rownames(df.final) <- c(paste('met1-10',c(1:10)),paste('met11-20',c(1:10)),paste('met21-30',c(1:10)),'met31',paste('flat',1:100))
+  groups <- c(rep('patter in 2 and 3',10),rep('patter in 2 and 4',10),rep('patter in 2,3, and 4',10),rep('patter with single metabolite',1),rep('flat',nrow(flat)))
+  rownames(df.final) <- c(paste('met1-10',c(1:10)),paste('met11-20',c(1:10)),paste('met21-30',c(1:10)),'met31',paste('flat',1:nrow(flat)))
   output <- vector(mode='list',length = 2)
   names(output) <- c('df','groups')
   output[[1]] <- df.final
@@ -117,12 +118,12 @@ generate_data.nocorrelation <- function(){
   #                  a2=y1[1],b2=y1[2],c2=y1[3],d2=y1[4],e2=y1[5],
   #                  a3=y2[1],b3=y2[2],c3=y2[3],d3=y2[4],e3=y2[5],
   #                  a4=y2[1],b4=y2[2],c4=y2[3],d4=y2[4],e4=y2[5])
-  flat <- tc.GENE(100,4)
+  flat <- tc.GENE(200,4)
   df.final <- rbind(one,two,three,flat)
   groups <- c(rep('one',nrow(one)),'two','three'
-              ,rep('flat',100))
+              ,rep('flat',nrow(flat)))
   rownames(df.final) <- c(paste('one',1:nrow(one)),'two','three'
-                          ,paste('flat',1:100))
+                          ,paste('flat',1:nrow(flat)))
   output <- vector(mode='list',length = 2)
   names(output) <- c('df','groups')
   output[[1]] <- df.final
