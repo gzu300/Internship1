@@ -200,8 +200,8 @@ asca.design.matrix <- function(i,j,r,time){
 #plot
 ######
 #leveragevsspe
-plot.leverage_spe <- function(df.final,asca.fit,groups){
-  lev.lim <- leverage.lims(df.final,R=1,FUN = ASCA.2f,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
+plot.leverage_spe <- function(df.final,asca.fit,groups, R=1){
+  lev.lim <- leverage.lims(df.final,R=R,FUN = ASCA.2f,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
   spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.05)[[2]]
   leverage <- asca.fit$Model.bab$leverage
   spe <- asca.fit$Model.bab$SPE
@@ -209,13 +209,15 @@ plot.leverage_spe <- function(df.final,asca.fit,groups){
   lev.spe.toplot$metabolites <- rownames(df.final)
   lev.spe.toplot$groups <- groups
   
-  plot <- ggplot(data = lev.spe.toplot,aes(x=leverage,y=spe,color=groups))+
+  plot <- ggplot(data = lev.spe.toplot,aes(x=leverage,y=spe))+
     geom_point()+
     geom_hline(yintercept = spe.lim)+
     geom_vline(xintercept = lev.lim)+
     #geom_text(aes(label=c(1,2,3,rep('',100)),hjust=-1.2))+
     labs(title = paste('leverage and SPE with',ncol(asca.fit$Model.bab$scores),'PCs'))
   print(plot)
+  output <- groups[leverage>lev.lim]
+  output
   #lev.spe.toplot
 }
 #plot.leverage_spe(df.final,asca.fit, groups)
@@ -240,7 +242,7 @@ plot.submodels_loading <- function(asca.fit,groups){
   bab.loadings$metabolites <- 1:nrow(bab.loadings)
   bab.loadings$groups <- groups
   for (each in 1:PCs){
-    plot <- ggplot(bab.loadings,aes(x=metabolites,y=bab.loadings[[each]],fill=groups,color=groups))+
+    plot <- ggplot(bab.loadings,aes(x=metabolites,y=bab.loadings[[each]]))+
       geom_bar(stat = 'identity',position = 'dodge')+
       ylab(paste('PC',each))+
       labs(title = paste('loading plot for submodel b.ab'))
