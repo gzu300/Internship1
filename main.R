@@ -2,8 +2,6 @@
 ######
 #simulation data
 ######
-setwd('~/Desktop/Internship1/')
-#setwd('~/../Desktop/Internship1/')
 library(tidyverse)
 #source('simulation_util.R')
 source('MaSigPro_util.R')
@@ -209,7 +207,7 @@ plot.leverage_spe <- function(df.final,asca.fit,groups, R=1){
   lev.spe.toplot$metabolites <- rownames(df.final)
   lev.spe.toplot$groups <- groups
   
-  plot <- ggplot(data = lev.spe.toplot,aes(x=leverage,y=spe))+
+  plot <- ggplot(data = lev.spe.toplot,aes(x=leverage,y=spe,color=groups))+
     geom_point()+
     geom_hline(yintercept = spe.lim)+
     geom_vline(xintercept = lev.lim)+
@@ -242,7 +240,7 @@ plot.submodels_loading <- function(asca.fit,groups){
   bab.loadings$metabolites <- 1:nrow(bab.loadings)
   bab.loadings$groups <- groups
   for (each in 1:PCs){
-    plot <- ggplot(bab.loadings,aes(x=metabolites,y=bab.loadings[[each]]))+
+    plot <- ggplot(bab.loadings,aes(x=metabolites,y=bab.loadings[[each]],fill=groups))+
       geom_bar(stat = 'identity',position = 'dodge')+
       ylab(paste('PC',each))+
       labs(title = paste('loading plot for submodel b.ab'))

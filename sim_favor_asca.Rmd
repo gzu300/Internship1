@@ -1,0 +1,110 @@
+---
+title: "sim_favor_asca"
+author: "zhu"
+date: "11/12/2018"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE,results = F)
+```
+```{r,echo=T}
+####pipeline#####
+i=2#treatment
+j=6#time
+r=4#replicate
+time=c(0,1,2,3,4,5)#time points
+```
+```{r trend}
+set.seed(999)
+#y1 <- 0.01*time+0.01*time^2+0.01*time^3+0.01*time^4
+ctrl <- 0.01*time+0.1
+tre1 <- -0.01*time-0.1
+y1 <- c(ctrl)
+y12 <- c(tre1)
+
+y2 <- c(ctrl)
+y22 <- c(tre1)
+
+y3 <- c(ctrl)
+y32 <- c(tre1)
+#y12 <- 0.01*time^2
+
+#y2 <- -time
+
+#y3 <- c(-2,-1,0,0,1,2)
+# y1 <- c(0,1,2,3,4,5)
+#y32 <- 0.01*time^2
+#y3 <- -0.01*time^3
+
+#total of 100 metabolites(columns)
+#total of 2*5*4=40 rows
+source('main.R')
+simulation <- generate_data.highcorrelation()
+df.final <- simulation$df
+groups <- simulation$groups
+```
+
+There are 12 metabolites with the differential expression shown in the above linear function and 100 metabolites with flat expression.
+
+```{r check correlation,include=F}
+#cov(t(df.final[c(1,11,21,31),]))
+knitr::kable(cor(t(df.final[1:6,])),caption = 'correlations')
+```
+
+
+```{r asca-gene design matrix and fit, message=F, warning=F}
+#design matrix
+mx <- asca.design.matrix(i,j,r,time)
+#fit model
+type=1
+Fac=c(1,1,1,1)
+asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = T)
+```
+
+Screeplot shows that 1-2 PCs to be included for submodel b.ab(treatment+interaction).
+
+```{r screeplot of submodel ab,eval=F}
+ab <- asca.fit$Model.ab$data
+plot(rep(1:6,2),ab[,1])
+```
+
+```{r leverage and spe plot}
+plot.leverage_spe(df.final,asca.fit,groups)
+```
+
+With 2 PCs selected, 10 out of 12 differential expressed metabolites corrected identified, fall into right-bottom quadrant.
+
+```{r score plot}
+plot.submodels_score(asca.fit,i,j)
+```
+
+score plot of submodel b.ab shows a clear seperation between treatment1 and treatment2. 
+
+```{r loading plot}
+plot.submodels_loading(asca.fit,groups)
+```
+
+loading plot shows differentially expressed metabolites making high contribution in this pc.
+
+```{r masigpro design matrix and fit,results=T}
+masigpro.design <- design_matrix(i,j,r,time)
+design <- make.design.matrix(edesign = masigpro.design,degree = 4)
+dis <- design$dis
+edesign <- design$edesign
+colnames(df.final) <- rownames(edesign)
+
+masigpro.fit <- maSigPro(df.final,masigpro.design,degree=4,step.method = 'backward')
+toplot <- rownames(masigpro.fit$summary)
+masigpro.fit$summary
+```
+
+However, masigpro could not identify any significant abnormal metabolites.
+```{r plot raw data metabolite2,eval=F}
+trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[2,])
+ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
+  geom_point()+
+  stat_summary(fun.y = mean,geom = 'line')
+```

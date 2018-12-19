@@ -55,7 +55,7 @@ see.genes(masigpro.fit$sig.genes$treatment2vstreatment1,show.fit = T,dis = edesi
 for (each in c(toplot)){
   PlotGroups(df.final[rownames(df.final)==each,],edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = each)
 }
-AA <- df.final["Ascorbic Acid",]
+AA <- df.final.masigpro["Succinic Acid",]
 PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector)
 # asca-gene---------------------
 

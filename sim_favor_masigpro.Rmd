@@ -1,0 +1,148 @@
+---
+title: "sim_favor_masigpro"
+author: "zhu"
+date: "11/12/2018"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
+```
+```{r}
+source('main.R')
+```
+```{r data}
+set.seed(999)
+####pipeline#####
+i=2#treatment
+j=6#time
+r=4#replicate
+time=c(0,1,2,3,4,5)#time points
+#y1 <- 0.01*time+0.01*time^2+0.01*time^3+0.01*time^4
+ctrl <- 0.4*time
+tre1 <- -0.4*time
+tre2 <- -0.2*((time-2.5)^2)+0.5
+tre3 <- -0.1*time+0.001*time^3
+notrend <- rep(0,6)
+centered_time <- c(scale(time,scale = F))
+y1 <- c(notrend)
+y12 <- c(ctrl)
+
+y2 <- c(notrend)
+y22 <- c(tre1)
+
+y3 <- c(notrend)
+y32 <- c(tre2)
+#y12 <- 0.01*time^2
+
+#y2 <- -time
+
+#y3 <- c(-2,-1,0,0,1,2)
+# y1 <- c(0,1,2,3,4,5)
+#y32 <- 0.01*time^2
+#y3 <- -0.01*time^3
+
+#total of 100 metabolites(columns)
+#total of 2*5*4=40 rows
+
+simulation <- generate_data.nocorrelation()
+df.final <- simulation$df
+groups <- simulation$groups
+```
+```{r plot raw data metabolite one}
+trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[10,])
+ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
+  geom_point()+
+  stat_summary(fun.y = mean,geom = 'line')+
+  labs(title = 'pattern "one"')
+```
+```{r plot raw data metabolite two}
+trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[20,])
+ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
+  geom_point()+
+  stat_summary(fun.y = mean,geom = 'line')+
+  labs(title = 'pattern "two"')
+```
+```{r plot raw data metabolite three}
+trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[21,])
+ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
+  geom_point()+
+  stat_summary(fun.y = mean,geom = 'line')+
+  labs(title = 'pattern "three"')
+```
+
+
+
+```{r check correlation}
+#cov(t(df.final[c(1,11,21,31),]))
+knitr::kable(cor(t(df.final[c(1,2,11,12,21,22,23),])),caption = 'correlations')
+```
+
+
+
+```{r masigpro design matrix and fit,results=F}
+masigpro.design <- design_matrix(i,j,r,time)
+design <- make.design.matrix(edesign = masigpro.design,degree = 4)
+dis <- design$dis
+edesign <- design$edesign
+colnames(df.final) <- rownames(edesign)
+
+masigpro.fit <- maSigPro(df.final,masigpro.design,degree=4,step.method = 'backward')
+toplot <- rownames(masigpro.fit$summary)
+```
+```{r masigpro summary}
+print(masigpro.fit$summary)
+```
+```{r asca-gene design matrix and fit, message=F, warning=F}
+#design matrix
+mx <- asca.design.matrix(i,j,r,time)
+#fit model
+type=1
+Fac=c(1,2,1,1)
+asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = T)
+```
+
+Screeplot shows that 1-2 PCs to be included for submodel b.ab(treatment+interaction).
+
+```{r leverage and spe plot}
+plot.leverage_spe(df.final,asca.fit,groups)
+```
+
+With 1 PCs selected, pattern 'one' and 'two' are modelled well. But pattern three has high spe. Its pattern hides in PC2
+
+```{r score plot}
+plot.submodels_score(asca.fit,i,j)
+```
+
+score plot of submodel b.ab shows a clear seperation between treatment1 and treatment2. 
+
+```{r loading plot}
+Fac.extrapc=c(1,1,2,1)
+asca.fit_extrapc <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac.extrapc,showvar = F,showscree = F)
+plot.submodels_loading(asca.fit_extrapc,groups)
+```
+
+loading plot of PC1 shows high contributions from pattern one and two. loading of PC2 shows the outstanding contribution from pattern three but at the same time, loadings from flat patterns are also high which means noises are fitted.
+
+```{r leverage spe}
+plot.leverage_spe(df.final,asca.fit_extrapc,groups,10)
+```
+
+
+```{r score plot}
+plot.submodels_score(asca.fit_extrapc,i,j)
+```
+
+
+```{r residual plot}
+residuals <- asca.fit$Model.bab$data-(asca.fit$Model.bab$scores%*%t(asca.fit$Model.bab$loadings))
+matplot(residuals[,21],type='l',col = 'red')
+matplot(residuals[,-21],type = 'l',col = 'black',add=T)
+```
+
+a clear pattern can be seen for pattern 'three' in residual plot. so the pattern needs to be analysed seperately.
+
+
+
