@@ -88,3 +88,16 @@ asca.selected <- plot.leverage_spe(df.final,asca.fit,colnames,20)
 plot.submodels_score(asca.fit,i,j)
 plot.submodels_loading(asca.fit,colnames)
 matplot(asca.fit$Model.bab$data-asca.fit$Model.bab$scores%*%t(asca.fit$Model.bab$loadings),type = 'l')
+# ----------------------------
+plot_metabolites <- function(range){
+  df.toplot <- data.frame(t(df.final[1:30,]))
+  df.toplot$time <- rep(rep(time,each=r),i)
+  df.toplot$treatment <- rep(1:2,each=r*j)
+  a <- df.toplot %>% 
+    gather(key = metabolites,value = value,1:25)
+  
+  ggplot(a,aes(x=time,y=value,color=factor(treatment)))+
+    geom_point(size=0.5)+
+    stat_summary(fun.y = mean,geom = 'line')+
+    facet_wrap(metabolites~.)
+}

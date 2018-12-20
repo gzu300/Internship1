@@ -17,6 +17,7 @@ j=6#time
 r=4#replicate
 time=c(0,1,2,3,4,5)#time points
 ```
+White noise is N(0,0.2)
 ```{r trend}
 set.seed(999)
 #y1 <- 0.01*time+0.01*time^2+0.01*time^3+0.01*time^4
@@ -46,8 +47,22 @@ simulation <- generate_data.highcorrelation()
 df.final <- simulation$df
 groups <- simulation$groups
 ```
+```{r plot raw data metabolite one}
+trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[5,])
+ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
+  geom_point()+
+  stat_summary(fun.y = mean,geom = 'line')+
+  labs(title = 'pattern')
+```
+```{r plot raw data metabolite two}
+trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[201,])
+ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
+  geom_point()+
+  stat_summary(fun.y = mean,geom = 'line')+
+  labs(title = 'flat')
+```
 
-There are 12 metabolites with the differential expression shown in the above linear function and 100 metabolites with flat expression.
+There are 21 metabolites with the differential expression shown in the above linear function and 200 metabolites with flat expression.
 
 ```{r check correlation,include=F}
 #cov(t(df.final[c(1,11,21,31),]))
@@ -60,11 +75,12 @@ knitr::kable(cor(t(df.final[1:6,])),caption = 'correlations')
 mx <- asca.design.matrix(i,j,r,time)
 #fit model
 type=1
-Fac=c(1,1,1,1)
+Fac=c(1,1,2,1)
 asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = T)
+print(asca.fit$Model.bab$var.exp)
 ```
 
-Screeplot shows that 1-2 PCs to be included for submodel b.ab(treatment+interaction).
+Screeplot shows that 1-2 PCs to be included for submodel b.ab(treatment+interaction). Here 2 pcs were selected
 
 ```{r screeplot of submodel ab,eval=F}
 ab <- asca.fit$Model.ab$data
@@ -72,7 +88,7 @@ plot(rep(1:6,2),ab[,1])
 ```
 
 ```{r leverage and spe plot}
-plot.leverage_spe(df.final,asca.fit,groups)
+plot.leverage_spe(df.final,asca.fit,groups,20)
 ```
 
 With 2 PCs selected, 10 out of 12 differential expressed metabolites corrected identified, fall into right-bottom quadrant.
@@ -103,7 +119,7 @@ masigpro.fit$summary
 
 However, masigpro could not identify any significant abnormal metabolites.
 ```{r plot raw data metabolite2,eval=F}
-trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[2,])
+trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[20,])
 ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
   geom_point()+
   stat_summary(fun.y = mean,geom = 'line')

@@ -6,6 +6,7 @@ library(tidyverse)
 #source('simulation_util.R')
 source('MaSigPro_util.R')
 source('ASCA-genes.1.2.1/sourceASCA.R')
+setwd('../')
 
 
 
@@ -41,12 +42,12 @@ generate_data.nocorrelation <- function(){
     }
     tc.dat
   }
-  one <- tc.GENE(10,4,
+  one <- tc.GENE(15,4,
                  #a1=y1[1],b1=y1[2],c1=y1[3],d1=y1[4],e1=y1[5],
                  #a2=y1.t[1],b2=y1.t[2],c2=y1.t[3],d2=y1.t[4],e2=y1.t[5],
                  a3=y1[1],b3=y1[2],c3=y1[3],d3=y1[4],e3=y1[5],f3=y1[6],
                  a4=y12[1],b4=y12[2],c4=y12[3],d4=y12[4],e4=y12[5],f4=y12[6])
-  two <- tc.GENE(10,4,
+  two <- tc.GENE(15,4,
                  #a1=y1[1],b1=y1[2],c1=y1[3],d1=y1[4],e1=y1[5],
                  #a2=y1.t[1],b2=y1.t[2],c2=y1.t[3],d2=y1.t[4],e2=y1.t[5],
                  a3=y2[1],b3=y2[2],c3=y2[3],d3=y2[4],e3=y2[5],
@@ -212,7 +213,8 @@ plot.leverage_spe <- function(df.final,asca.fit,groups, R=1){
     geom_hline(yintercept = spe.lim)+
     geom_vline(xintercept = lev.lim)+
     #geom_text(aes(label=c(1,2,3,rep('',100)),hjust=-1.2))+
-    labs(title = paste('leverage and SPE with',ncol(asca.fit$Model.bab$scores),'PCs'))
+    labs(title = paste('leverage and SPE with',ncol(asca.fit$Model.bab$scores),'PCs'))+
+    theme(legend.text = element_text(size=5),legend.key.size = unit(0.1,'cm'))
   print(plot)
   output <- groups[leverage>lev.lim]
   output
@@ -243,7 +245,8 @@ plot.submodels_loading <- function(asca.fit,groups){
     plot <- ggplot(bab.loadings,aes(x=metabolites,y=bab.loadings[[each]],fill=groups))+
       geom_bar(stat = 'identity',position = 'dodge')+
       ylab(paste('PC',each))+
-      labs(title = paste('loading plot for submodel b.ab'))
+      labs(title = paste('loading plot for submodel b.ab'))+
+      theme(legend.text = element_text(size=5),legend.key.size = unit(0.1,'cm'))
     print(plot)
   }
 }

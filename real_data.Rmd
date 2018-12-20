@@ -1,0 +1,121 @@
+---
+title: "macrophage"
+author: "zhu"
+date: "20/12/2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F,message = F,warning = F,results = F)
+```
+
+```{r data transformation}
+library(tidyverse)
+library(readxl)
+colnames <- read_xlsx('macrophage%20polarization.xlsx',range = 'PeakArea!I1:BL1')
+df <- read_xlsx('macrophage%20polarization.xlsx',range = 'PeakArea!I4:BL43',col_names = colnames(colnames))
+df.raw <- read_xlsx('macrophage%20polarization.xlsx',range = 'PeakArea!I4:BL43',col_names = colnames(colnames))
+rm(colnames)
+
+
+sums <- apply(df,MARGIN = 1,sum,na.rm=T)
+df <- sweep(df,MARGIN = 1,STATS = sums,FUN = "/")
+i=2
+j=5
+r=4
+time=c(0,2,6,10,24)
+df$togroup <- rep(1:10,each=4)
+df[20,] <- df[19,]
+df1 <- df %>% 
+  group_by(togroup) %>% 
+  mutate_all(~ifelse(is.na(.x), mean(.x, na.rm = TRUE), .x))
+df1[1:4,"Fructose-1,6-bisphosphate"] <- df1$`Fructose-1,6-bisphosphate`[5]#fill NA with mean of replicates. F16B is missing values at entire time 1 control. filled with values at time 1 treatment
+df1$togroup <- NULL
+df1$Leucine <- NULL#leucine has lots of NA. so removed
+df.log <- log(df1)#log transform
+df.final.masigpro <- t(scale(df.log,center = F,scale = apply(df.log, 2, sd, na.rm = TRUE)))
+df.final <- t(scale(df.log))
+colnames <- rownames(df.final)
+```
+
+```{r function plot metabolites}
+plot_metabolites <- function(range){
+  df.toplot <- data.frame(t(df.final[range,]))
+  df.toplot$time <- rep(rep(time,each=r),i)
+  df.toplot$treatment <- rep(1:2,each=r*j)
+  a <- df.toplot %>% 
+    gather(key = metabolites,value = value,1:length(range))
+  
+  ggplot(a,aes(x=time,y=value,color=factor(treatment)))+
+    geom_point(size=0.5)+
+    stat_summary(fun.y = mean,geom = 'line')+
+    theme(legend.title = element_text(size = 5))+
+    facet_wrap(metabolites~.)
+}
+plot_a_metabolite <- function(which){
+  trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[which,])
+  ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
+    geom_point()+
+    stat_summary(fun.y = mean,geom = 'line')
+}
+```
+
+```{r plot 1:27}
+plot_metabolites(1:25)
+plot_metabolites(26:55)
+```
+
+```{r 28:55,include=F}
+plot_metabolites(28:55)
+```
+
+```{r,include=F}
+plot_a_metabolite("CMP")
+```
+
+
+```{r,results=T}
+source('main.R')
+masigpro.design <- design_matrix(i,j,r,time)
+design <- make.design.matrix(edesign = masigpro.design,degree = 2)
+dis <- design$dis
+edesign <- design$edesign
+colnames(df.final) <- rownames(edesign)
+
+masigpro.fit <- maSigPro(df.final,masigpro.design,degree=2)
+print(masigpro.fit$summary)
+toplot <- rownames(masigpro.fit$sig.genes$treatment2vstreatment1$sig.profiles)
+```
+```{r,include=F}
+AA <- df.final.masigpro["Itaconic acid",]
+PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector)
+```
+
+```{r}
+mx <- asca.design.matrix(i,j,r,time)
+
+source('ASCA-genes.1.2.1/sourceASCA_mac.R')
+asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = 1, Fac = c(1,2,2,2))
+Fac=c(1,2,2,2)
+type=1
+```
+
+```{r,results=T}
+asca.selected <- plot.leverage_spe(df.final,asca.fit,colnames,2)
+print(asca.selected)
+```
+```{r}
+plot.submodels_score(asca.fit,i,j)
+```
+```{r}
+plot.submodels_loading(asca.fit,colnames)
+```
+```{r,include=F}
+matplot(asca.fit$Model.bab$data-asca.fit$Model.bab$scores%*%t(asca.fit$Model.bab$loadings),type = 'l')
+```
+
+
+
+
