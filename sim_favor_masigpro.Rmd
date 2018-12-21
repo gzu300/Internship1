@@ -149,7 +149,10 @@ matplot(residuals[,-21],type = 'l',col = 'black',add=T)
 ```
 
 ```{r unormed loading}
-plot.leverage_spe(df.final,asca.fit,groups,10)
+a <- plot.leverage_spe(df.final,asca.fit,groups,10)
+```
+```{r}
+b <- plot.leverage_spe_original(df.final,asca.fit,groups,10)
 ```
 
 ```{r}
