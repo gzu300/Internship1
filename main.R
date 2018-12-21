@@ -62,7 +62,7 @@ generate_data.nocorrelation <- function(){
   #                  a2=y1[1],b2=y1[2],c2=y1[3],d2=y1[4],e2=y1[5],
   #                  a3=y2[1],b3=y2[2],c3=y2[3],d3=y2[4],e3=y2[5],
   #                  a4=y2[1],b4=y2[2],c4=y2[3],d4=y2[4],e4=y2[5])
-  flat <- tc.GENE(200,4)
+  flat <- tc.GENE(50,4)
   df.final <- rbind(one,two,three,flat)
   groups <- c(rep('one',nrow(one)),rep('two',nrow(two)),rep('three',nrow(three))
               ,rep('flat',nrow(flat)))
@@ -200,9 +200,10 @@ asca.design.matrix <- function(i,j,r,time){
 ######
 #leveragevsspe
 plot.leverage_spe <- function(df.final,asca.fit,groups, R=1){
-  lev.lim <- leverage.lims(df.final,R=R,FUN = ASCA.2f,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
+  lev.lim <- leverage.lims(df.final,R=R,FUN = ASCA.2f_leverage,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
   spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.05)[[2]]
-  leverage <- asca.fit$Model.bab$leverage
+  asca.fit_leverage <- ASCA.2f_leverage(t(df.final),Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,showvar = F, showscree = F)
+  leverage <- asca.fit_leverage$Model.bab$leverage
   spe <- asca.fit$Model.bab$SPE
   lev.spe.toplot <- data.frame(leverage=leverage,spe=spe)
   lev.spe.toplot$metabolites <- rownames(df.final)

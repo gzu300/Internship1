@@ -27,13 +27,13 @@ tre2 <- -0.2*((time-2.5)^2)+0.5
 tre3 <- c(0,0.3,1,0.4,0.6,2)
 notrend <- rep(0,6)
 y1 <- c(notrend)
-y12 <- c(notrend)
+y12 <- c(tre1)
 
 y2 <- c(notrend)
-y22 <- c(tre1+1)
+y22 <- c(tre1)
 
 y3 <- c(notrend)
-y32 <- c(tre1+1)
+y32 <- c(tre1)
 #y12 <- 0.01*time^2
 
 #y2 <- -time
@@ -148,7 +148,14 @@ matplot(residuals[,21],type='l',col = 'red')
 matplot(residuals[,-21],type = 'l',col = 'black',add=T)
 ```
 
+```{r unormed loading}
+plot.leverage_spe(df.final,asca.fit,groups,10)
+```
 
+```{r}
+asca.fit.normedld <- ASCA.2f_leverage(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac.extrapc,showvar = F,showscree = T)
+plot.submodels_loading(asca.fit.normedld,groups)
+```
 
 
 
