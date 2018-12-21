@@ -12,11 +12,12 @@ n<-ncol(X)
 p<-nrow(X)
 offset<-apply(X,2,mean)
 Xoff<-X-(cbind(matrix(1,p,1))%*%rbind(offset))
-
+Xoff <- X
 #eigen command sorts the eigenvalues in decreasing orden.
 
 eigen<-eigen(Xoff%*%t(Xoff)/(p-1))
 var<-cbind(eigen$values/sum(eigen$values),cumsum(eigen$values/sum(eigen$values)))
+print(eigen$values)
 
 loadings2<-eigen$vectors
 scores2<-t(Xoff)%*%loadings2
@@ -30,3 +31,11 @@ output<-list(eigen,var,scores1,loadings1)
 names(output)<-c("eigen","var.exp","scores","loadings")
 output
 }
+
+X <- matrix(c(5,-1,5,7),nrow = 2)
+a <- PCA.GENES(X)
+
+length.score <- diag(sqrt(t(a$scores)%*%a$scores))
+normed.score <- sweep(a$score,MARGIN = 1,STATS = length.score,"/")
+
+loading.scaled <- t(X)%*%normed.score

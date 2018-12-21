@@ -6,7 +6,9 @@
 library(tidyverse)
 
 permutate <- function(mx_raw){
-  #rows are samples;columns are variables
+  #perterb columns
+  # 1,2,3     1,3,2
+  # 1,2,3  -> 1,3,2 
   m <- ncol(mx_raw)
   places <- sample(1:m)
   m.output <- mx_raw[,places]
