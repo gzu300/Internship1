@@ -260,7 +260,7 @@ plot.submodels_score <- function(asca.fit,i,j){
 }
 #plot.submodels_score(asca.fit,i)
   #loading plot
-plot.submodels_loading <- function(asca.fit,groups){
+plot.submodels_loading <- function(asca.fit,groups,title = paste('loading plot for submodel b.ab')){
   bab.loadings <- data.frame(loading=asca.fit$Model.bab$loadings)
   PCs <- ncol(bab.loadings)
   bab.loadings$metabolites <- 1:nrow(bab.loadings)
@@ -269,7 +269,7 @@ plot.submodels_loading <- function(asca.fit,groups){
     plot <- ggplot(bab.loadings,aes(x=metabolites,y=bab.loadings[[each]],fill=groups))+
       geom_bar(stat = 'identity',position = 'dodge')+
       ylab(paste('PC',each))+
-      labs(title = paste('loading plot for submodel b.ab'))+
+      labs(title = title)+
       theme(legend.text = element_text(size=5),legend.key.size = unit(0.1,'cm'))
     print(plot)
   }

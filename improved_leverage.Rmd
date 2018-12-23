@@ -1,0 +1,124 @@
+---
+title: "improved leverage"
+author: "zhu"
+date: "23/12/2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
+```
+```{r}
+source('main.R')
+```
+```{r data}
+set.seed(999)
+####pipeline#####
+i=2#treatment
+j=6#time
+r=4#replicate
+time=c(0,1,2,3,4,5)#time points
+#y1 <- 0.01*time+0.01*time^2+0.01*time^3+0.01*time^4
+ctrl <- 0.4*time
+tre1 <- -0.4*time
+tre2 <- -0.2*((time-2.5)^2)+0.5
+tre3 <- c(0,0.3,1,0.4,0.6,2)
+notrend <- rep(0,6)
+y1 <- c(notrend)
+y12 <- c(tre1)
+
+y2 <- c(notrend)
+y22 <- c(tre1)
+
+y3 <- c(notrend)
+y32 <- c(tre1)
+#y12 <- 0.01*time^2
+
+#y2 <- -time
+
+#y3 <- c(-2,-1,0,0,1,2)
+# y1 <- c(0,1,2,3,4,5)
+#y32 <- 0.01*time^2
+#y3 <- -0.01*time^3
+
+#total of 100 metabolites(columns)
+#total of 2*5*4=40 rows
+
+simulation <- generate_data.nocorrelation()
+df.final <- simulation$df
+groups <- simulation$groups
+```
+
+## there are 2 treatments, 6 time points and 4 replicates. replicates were drawn as independent observations from normal distribution N(0,0.2). The simulation dataset consists of 48 rows(samples) and 81 columns(31 differential expressed variable and 50 flat variables).
+
+```{r plot raw data metabolite one}
+trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[1,])
+ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
+  geom_point()+
+  stat_summary(fun.y = mean,geom = 'line')+
+  labs(title = 'differentially expressed variable')
+```
+
+##example of differentially expressed variable is shown above.
+
+```{r original asca-gene design matrix and fit, message=F, warning=F}
+#design matrix
+mx <- asca.design.matrix(i,j,r,time)
+#fit model
+type=1
+Fac=c(1,1,1,1)
+asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = T)
+```
+
+```{r leverage and spe plot}
+plot.leverage_spe_original(df.final,asca.fit,groups,R=20)
+```
+
+##As expected, with 1 PC selected for submodel treatment and submodel interaction, leverage cutoff line set excluded all of the variabes to be significant.
+
+##As discussed previously, this is due to the loadings were normalized to unit vector during calculation. Alternatively, we could normalize score to unit vector. Modification was done in the asca-gene algotirhm to achieve this. The formulus as well as the code is shown below:
+
+```{r PCA ld unormed,eval=F, include=T}
+PCA.GENES.unorm_loading<-function(X)
+{
+  #PCA.GENES is very useful to obtain principal components to a matrix that has more variables than individuals. 
+  #R can not apply princomp is such case and when there are a lot of variables eigen(t(X)%*%X) can not be computed.
+  
+  #X is a matrix that has on columns the genes considered as variables in the PCA analysis.
+  #First we center the matrix by columns (Xoff) and then we obtain the eigenvalues and the eigenvectors of the matrix Xoff%*%t(Xoff) and we #use the equivalences between the loadings and scores to obtain the solution
+  
+  
+  n<-ncol(X)
+  p<-nrow(X)
+  offset<-apply(X,2,mean)
+  Xoff<-X-(cbind(matrix(1,p,1))%*%rbind(offset))
+  Xoff <- X
+  #eigen command sorts the eigenvalues in decreasing orden.
+  
+  eigen<-eigen(Xoff%*%t(Xoff)/(p-1))#calculates eigen of c*cT, eigen() returns unit vector
+  var<-cbind(eigen$values/sum(eigen$values),cumsum(eigen$values/sum(eigen$values)))#variability explained and accumulated variability explained
+  
+  scores.normed<-eigen$vectors# this c*cT's eigen vector which is actually normalized score in PCA.
+  loading.unormed<-t(Xoff)%*%scores.normed
+  
+
+  
+  output<-list(eigen,var,scores.normed,loading.unormed)
+  names(output)<-c("eigen","var.exp","scores","loadings.unormed")
+  output
+}
+```
+
+```{r unormed lds}
+asca.fit.normedld <- ASCA.2f_leverage(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = F)
+plot.submodels_loading(asca.fit.normedld,groups,title="unormed loading for submodel b.ab")
+```
+
+
+```{r improved leverage,results=F}
+plot.leverage_spe(df.final,asca.fit,groups,R=20)
+```
+
+##the new loading and leverage and spe plot are shown above. simulation data are correctly indentified as designed.
