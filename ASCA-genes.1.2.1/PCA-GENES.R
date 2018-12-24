@@ -12,7 +12,6 @@ n<-ncol(X)
 p<-nrow(X)
 offset<-apply(X,2,mean)
 Xoff<-X-(cbind(matrix(1,p,1))%*%rbind(offset))
-Xoff <- X
 #eigen command sorts the eigenvalues in decreasing orden.
 
 eigen<-eigen(Xoff%*%t(Xoff)/(p-1))
@@ -46,7 +45,6 @@ PCA.GENES.unorm_loading<-function(X)
   p<-nrow(X)
   offset<-apply(X,2,mean)
   Xoff<-X-(cbind(matrix(1,p,1))%*%rbind(offset))
-  Xoff <- X
   #eigen command sorts the eigenvalues in decreasing orden.
   
   eigen<-eigen(Xoff%*%t(Xoff)/(p-1))

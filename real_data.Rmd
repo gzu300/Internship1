@@ -19,9 +19,6 @@ df <- read_xlsx('macrophage%20polarization.xlsx',range = 'PeakArea!I4:BL43',col_
 df.raw <- read_xlsx('macrophage%20polarization.xlsx',range = 'PeakArea!I4:BL43',col_names = colnames(colnames))
 rm(colnames)
 
-
-sums <- apply(df,MARGIN = 1,sum,na.rm=T)
-df <- sweep(df,MARGIN = 1,STATS = sums,FUN = "/")
 i=2
 j=5
 r=4
@@ -41,7 +38,8 @@ colnames <- rownames(df.final)
 ```
 
 ```{r function plot metabolites}
-plot_metabolites <- function(range){
+plot_metabolites <- function(df,range){
+  df.final <- df
   df.toplot <- data.frame(t(df.final[range,]))
   df.toplot$time <- rep(rep(time,each=r),i)
   df.toplot$treatment <- rep(1:2,each=r*j)
@@ -50,22 +48,29 @@ plot_metabolites <- function(range){
   
   ggplot(a,aes(x=time,y=value,color=factor(treatment)))+
     geom_point(size=0.5)+
-    stat_summary(fun.y = mean,geom = 'line')+
+    stat_summary(fun.y = median,geom = 'line')+
     theme(legend.title = element_text(size = 5))+
     facet_wrap(metabolites~.)
 }
-plot_a_metabolite <- function(which){
+plot_a_metabolite <- function(df,FUN,which){
+  df.final <- df
   trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[which,])
   ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
     geom_point()+
-    stat_summary(fun.y = mean,geom = 'line')
+    stat_summary(fun.y = FUN,geom = 'line')
 }
 ```
 
 ```{r plot 1:27}
-plot_metabolites(1:25)
-plot_metabolites(26:55)
+plot_metabolites(t(df.raw),1:6)
+plot_metabolites(df.final,1:10)
 ```
+
+```{r}
+plot_a_metabolite(df.final,mean,"Adenosine")
+plot_a_metabolite(df.final,median,"Adenosine")
+```
+
 
 ```{r 28:55,include=F}
 plot_metabolites(28:55)
@@ -77,7 +82,7 @@ plot_a_metabolite("CMP")
 
 
 ```{r,results=T}
-source('main.R')
+source('utils.R')
 masigpro.design <- design_matrix(i,j,r,time)
 design <- make.design.matrix(edesign = masigpro.design,degree = 2)
 dis <- design$dis

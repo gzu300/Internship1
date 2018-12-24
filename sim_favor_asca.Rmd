@@ -42,7 +42,7 @@ y32 <- c(tre1)
 
 #total of 100 metabolites(columns)
 #total of 2*5*4=40 rows
-source('main.R')
+source('utils.R')
 simulation <- generate_data.highcorrelation()
 df.final <- simulation$df
 groups <- simulation$groups
@@ -86,6 +86,11 @@ Screeplot shows that 1-2 PCs to be included for submodel b.ab(treatment+interact
 ab <- asca.fit$Model.ab$data
 plot(rep(1:6,2),ab[,1])
 ```
+
+```{r original leverage and spe plot}
+plot.leverage_spe_original(df.final,asca.fit,groups,1)
+```
+
 
 ```{r leverage and spe plot}
 plot.leverage_spe(df.final,asca.fit,groups,20)

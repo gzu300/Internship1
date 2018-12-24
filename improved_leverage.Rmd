@@ -11,7 +11,7 @@ output:
 knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
 ```
 ```{r}
-source('main.R')
+source('utils.R')
 ```
 ```{r data}
 set.seed(999)
@@ -51,8 +51,11 @@ df.final <- simulation$df
 groups <- simulation$groups
 ```
 
-## there are 2 treatments, 6 time points and 4 replicates. replicates were drawn as independent observations from normal distribution N(0,0.2). The simulation dataset consists of 48 rows(samples) and 81 columns(31 differential expressed variable and 50 flat variables).
+##Data
 
+### there are 2 treatments, 6 time points and 4 replicates. replicates were drawn as independent observations from normal distribution N(0,0.2). The simulation dataset consists of 48 rows(samples) and 81 columns(31 differential expressed variable and 50 flat variables).
+
+###example of differentially expressed variable is shown below.
 ```{r plot raw data metabolite one}
 trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[1,])
 ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
@@ -61,7 +64,7 @@ ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
   labs(title = 'differentially expressed variable')
 ```
 
-##example of differentially expressed variable is shown above.
+##Original leverage
 
 ```{r original asca-gene design matrix and fit, message=F, warning=F}
 #design matrix
@@ -76,11 +79,13 @@ asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, 
 plot.leverage_spe_original(df.final,asca.fit,groups,R=20)
 ```
 
-##As expected, with 1 PC selected for submodel treatment and submodel interaction, leverage cutoff line set excluded all of the variabes to be significant.
+###As expected, with 1 PC selected for submodel treatment and submodel interaction, leverage cutoff line set excluded all of the variabes to be significant.
 
-##As discussed previously, this is due to the loadings were normalized to unit vector during calculation. Alternatively, we could normalize score to unit vector. Modification was done in the asca-gene algotirhm to achieve this. The formulus as well as the code is shown below:
+##Improved leverage
 
-```{r PCA ld unormed,eval=F, include=T}
+###As discussed previously, this is due to the loadings were normalized to unit vector during calculation. Alternatively, we could normalize score to unit vector. Modification was done in the asca-gene algotirhm to achieve this. The formulus as well as the code is shown below:
+
+```{r PCA ld unormed,eval=F, echo=T}
 PCA.GENES.unorm_loading<-function(X)
 {
   #PCA.GENES is very useful to obtain principal components to a matrix that has more variables than individuals. 
@@ -94,13 +99,11 @@ PCA.GENES.unorm_loading<-function(X)
   p<-nrow(X)
   offset<-apply(X,2,mean)
   Xoff<-X-(cbind(matrix(1,p,1))%*%rbind(offset))
-  Xoff <- X
-  #eigen command sorts the eigenvalues in decreasing orden.
   
-  eigen<-eigen(Xoff%*%t(Xoff)/(p-1))#calculates eigen of c*cT, eigen() returns unit vector
-  var<-cbind(eigen$values/sum(eigen$values),cumsum(eigen$values/sum(eigen$values)))#variability explained and accumulated variability explained
+  eigen<-eigen(Xoff%*%t(Xoff)/(p-1))#calculates eigen value and unit eigen vector of c*cT
+  var<-cbind(eigen$values/sum(eigen$values),cumsum(eigen$values/sum(eigen$values)))
   
-  scores.normed<-eigen$vectors# this c*cT's eigen vector which is actually normalized score in PCA.
+  scores.normed<-eigen$vectors
   loading.unormed<-t(Xoff)%*%scores.normed
   
 
@@ -111,7 +114,7 @@ PCA.GENES.unorm_loading<-function(X)
 }
 ```
 
-```{r unormed lds}
+```{r unormed lds,results=F,fig.height=5,fig.width=10}
 asca.fit.normedld <- ASCA.2f_leverage(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = F)
 plot.submodels_loading(asca.fit.normedld,groups,title="unormed loading for submodel b.ab")
 ```
@@ -121,4 +124,4 @@ plot.submodels_loading(asca.fit.normedld,groups,title="unormed loading for submo
 plot.leverage_spe(df.final,asca.fit,groups,R=20)
 ```
 
-##the new loading and leverage and spe plot are shown above. simulation data are correctly indentified as designed.
+###the new loading and leverage and spe plot are shown above. simulation data are correctly indentified as designed.

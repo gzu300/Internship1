@@ -11,7 +11,7 @@ output:
 knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
 ```
 ```{r}
-source('main.R')
+source('utils.R')
 ```
 ```{r data}
 set.seed(999)
@@ -112,7 +112,7 @@ asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, 
 Screeplot shows that 1 PC to be included for submodel b.ab(treatment+interaction).
 
 ```{r leverage and spe plot}
-plot.leverage_spe(df.final,asca.fit,groups,R=20)
+plot.leverage_spe(df.final,asca.fit,groups,R=1)
 ```
 
 With 1 PCs selected, all the patterns are within the leverage limits.

@@ -137,42 +137,7 @@ generate_data.highcorrelation <- function(){
   output
 }
 
-#####################masigpro#############
 
-######
-#design matrix
-######
-
-# masigpro.design <- design_matrix(i,j,r,time)
-# design <- make.design.matrix(edesign = masigpro.design,degree = 3)
-# dis <- design$dis
-# edesign <- design$edesign
-# colnames(df.final) <- rownames(edesign)
-
-# ########
-# #fit model
-# ########
-# masigpro.fit <- maSigPro(df.final,masigpro.design,degree=3,step.method = 'forward')
-# toplot <- rownames(masigpro.fit$sig.genes$treatment2vscontrol$sig.profiles)
-# #######
-# #plot
-# ######
-# see.genes(masigpro.fit$sig.genes$treatment1vscontrol,show.fit = T,dis = edesign,k = 4)
-# for (each in c(toplot)){
-#   PlotGroups(df.final[rownames(df.final)==each,],edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector)
-# }
-# AA <- df.final["met31",]
-# PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,sub = 'Regression model of one variable')
-# trend.toplot <- data.frame(replicate=rep(1:20,each=4),time=rep(c(0,2,6,10,24),each=4),treatment=rep(c('control','treatment1','treatment2','treatment3'),each=20),'metabolite1-10'=df.final[1,],'metabolite11-20'=df.final[11,],'metabolite21-30'=df.final[21,],'metabolite31'=df.final[31,])
-# ggplot(trend.toplot,aes(x=time,y=metabolite1.10,color=treatment))+
-#   geom_point()+
-#   stat_summary(fun.y = mean,geom = 'line')
-# ggplot(trend.toplot,aes(x=time,y=metabolite11.20,color=treatment))+
-#   geom_point()
-# ggplot(trend.toplot,aes(x=time,y=metabolite21.30,color=treatment))+
-#   geom_point()
-# ggplot(trend.toplot,aes(x=time,y=metabolite31,color=treatment))+
-#   geom_point()
 #######################asca-gene#############
 
 ######
@@ -180,6 +145,7 @@ generate_data.highcorrelation <- function(){
 #####
 ##functions
 asca.design.matrix <- function(i,j,r,time){
+  #time: a vector consists of time points in experiment design.
   mx <- vector(mode = 'list')
   mx[[1]] <- matrix(0,nrow = i*j*r, ncol = i, dimnames = list(c(),paste('treatment',1:i)))+c(rep(1,j*r),rep(0,i*j*r))
   mx[[2]] <- matrix(0,nrow = i*j*r, ncol = j, dimnames = list(c(),paste('T',time)))+c(rep(c(rep(1,r),rep(0,j*r-r)),i),rep(0,r))
@@ -187,21 +153,15 @@ asca.design.matrix <- function(i,j,r,time){
   names(mx) <- c('i','j','ij')
   mx
 }
-##
-#mx <- asca.design.matrix(i,j,r,time)
-######
-#fit model
-######
-# type=1
-# Fac=c(1,1,3,2)
-# asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
+
 ######
 #plot
 ######
 #leveragevsspe
 plot.leverage_spe_original <- function(df.final,asca.fit,groups, R=1){
+  #original leverage normalised to 1
   lev.lim <- leverage.lims(df.final,R=R,FUN = ASCA.2f,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
-  spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.05)[[2]]
+  spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.01)[[2]]
   leverage <- asca.fit$Model.bab$leverage
   spe <- asca.fit$Model.bab$SPE
   lev.spe.toplot <- data.frame(leverage=leverage,spe=spe)
@@ -221,9 +181,14 @@ plot.leverage_spe_original <- function(df.final,asca.fit,groups, R=1){
   #lev.spe.toplot
 }
 
-plot.leverage_spe <- function(df.final,asca.fit,groups, R=1){
+plot.leverage_spe <- function(df.final,asca.fit,groups=NULL, R=1){
+  #attention: df.final. rows are features(eg.metabolites), columns are samples.
+  #groups is a vector of strings or numbers specifies patterns of variables. 
+  #it needs to be the same length as variables. same pattern gives the same tag.
+  #R is the number of permutations
+  #scores are normalised to 1 instead of loadings
   lev.lim <- leverage.lims(df.final,R=R,FUN = ASCA.2f_leverage,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
-  spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.05)[[2]]
+  spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.01)[[2]]
   asca.fit_leverage <- ASCA.2f_leverage(t(df.final),Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,showvar = F, showscree = F)
   leverage <- asca.fit_leverage$Model.bab$leverage
   spe <- asca.fit$Model.bab$SPE
@@ -247,6 +212,7 @@ plot.leverage_spe <- function(df.final,asca.fit,groups, R=1){
 #plot.leverage_spe(df.final,asca.fit, groups)
 #score plot
 plot.submodels_score <- function(asca.fit,i,j){
+  #plot score vs time of all the PCs for submodel b.ab
   scores <- asca.fit$Model.bab$scores
   PCs <- ncol(scores)
   bab.toplot <- data.frame(scores=scores,time=rep(time,i),treatments=rep(paste('treatment',1:i),each=j))
@@ -260,7 +226,10 @@ plot.submodels_score <- function(asca.fit,i,j){
 }
 #plot.submodels_score(asca.fit,i)
   #loading plot
-plot.submodels_loading <- function(asca.fit,groups,title = paste('loading plot for submodel b.ab')){
+plot.submodels_loading <- function(asca.fit,groups=NULL,title = paste('loading plot for submodel b.ab')){
+  #plot loadings for all the PCs
+  #groups is a vector of strings or numbers specifies patterns of variables. 
+  #it needs to be the same length as variables. same pattern gives the same tag.
   bab.loadings <- data.frame(loading=asca.fit$Model.bab$loadings)
   PCs <- ncol(bab.loadings)
   bab.loadings$metabolites <- 1:nrow(bab.loadings)
