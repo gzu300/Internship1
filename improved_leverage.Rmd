@@ -48,7 +48,7 @@ y32 <- c(tre1)
 p1 <- 15
 p2 <- 15
 p3 <- 1
-neg <- 50
+neg <- 2000
 simulation <- generate_data.nocorrelation(p1,p2,p3,neg)
 df.final <- simulation$df
 groups <- simulation$groups
@@ -124,8 +124,10 @@ plot.submodels_loading(asca.fit.normedld,groups,title="unormed loading for submo
 
 
 ```{r improved leverage,results=F}
-leverage_spe <- plot.leverage_spe(df.final,asca.fit,groups,R=1)
-leverage_spe$`metabolites>leverage_lim` %notin% groups[1:(p1+p2+p3)]
+asca.fitted <- fitted(df.final,asca.fit,R=1,groups=groups,which_leverage = ASCA.2f_leverage)
+leverage_spe <- plot.leverage_spe(asca.fitted,No.sample = nrow(df.final))
+#leverage_spe$`metabolites>leverage_lim` %notin% groups[1:(p1+p2+p3)]
+confusion_matrix <- stats(asca.fitted$stats_for_plot)
 ```
 
 ###the new loading and leverage and spe plot are shown above. simulation data are correctly indentified as designed.

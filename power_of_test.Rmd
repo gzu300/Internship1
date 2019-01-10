@@ -56,7 +56,9 @@ for (each in N){
   type=1
   Fac=c(1,1,1,1)
   asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = F)
-  plot.leverage_spe_original(df.final,asca.fit,groups,R=1,No.sample=each)
+  asca.fitted.original <- fitted(df.final,asca.fit,groups,1,ASCA.2f)
+  plot.leverage_spe(asca.fitted.original)
+  print(data.frame(stats(asca.fitted.original$stats_for_plot)))
 }
 ```
 

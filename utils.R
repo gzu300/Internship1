@@ -158,78 +158,76 @@ asca.design.matrix <- function(i,j,r,time){
 #plot
 ######
 #leveragevsspe
-plot.leverage_spe_original <- function(df.final,asca.fit,groups, R=1,No.sample=NULL){
-  #original leverage normalised to 1
-  lev.lim <- leverage.lims(df.final,R=R,FUN = ASCA.2f,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
-  spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.01)[[2]]
-  leverage <- asca.fit$Model.bab$leverage
-  spe <- asca.fit$Model.bab$SPE
-  lev.spe.toplot <- data.frame(leverage=leverage,spe=spe)
-  lev.spe.toplot$metabolites <- rownames(df.final)
-  lev.spe.toplot$groups <- groups
-  
-  plot <- ggplot(data = lev.spe.toplot,aes(x=leverage,y=spe,color=groups))+
-    geom_point()+
-    geom_hline(yintercept = spe.lim)+
-    geom_vline(xintercept = lev.lim)+
-    #geom_text(aes(label=c(1,2,3,rep('',100)),hjust=-1.2))+
-    labs(title = paste('improved leverage and SPE with',ncol(asca.fit$Model.bab$scores),'PCs'),
-         subtitle = paste('total Nr.variables:',each))+
-    theme(legend.text = element_text(size=5),legend.key.size = unit(0.1,'cm'))
-  print(plot)
-  output <- groups[leverage>lev.lim]
-  output
-  #lev.spe.toplot
-}
+# plot.leverage_spe_original <- function(df.final,asca.fit,groups, R=1,No.sample=NULL){
+#   ###########
+#   #OBLOSETED#
+#   ###########
+#   #original leverage normalised to 1
+#   # lev.lim <- leverage.lims(df.final,R=R,FUN = ASCA.2f,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
+#   # spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.01)[[2]]
+#   # leverage <- asca.fit$Model.bab$leverage
+#   # spe <- asca.fit$Model.bab$SPE
+#   # lev.spe.toplot <- data.frame(leverage=leverage,spe=spe)
+#   # lev.spe.toplot$metabolites <- rownames(df.final)
+#   # lev.spe.toplot$groups <- groups
+#   plot <- ggplot(data = lev.spe.toplot,aes(x=leverage,y=spe,color=groups))+
+#     geom_point()+
+#     geom_hline(yintercept = spe.lim)+
+#     geom_vline(xintercept = lev.lim)+
+#     #geom_text(aes(label=c(1,2,3,rep('',100)),hjust=-1.2))+
+#     labs(title = paste('improved leverage and SPE with',ncol(asca.fit$Model.bab$scores),'PCs'),
+#          subtitle = paste('total Nr.variables:',each))+
+#     theme(legend.text = element_text(size=5),legend.key.size = unit(0.1,'cm'))
+#   print(plot)
+#   output <- groups[leverage>lev.lim]
+#   output
+#   #lev.spe.toplot
+# }
 
-plot.leverage_spe <- function(df.final,asca.fit,groups=NULL, R=1, No.sample=NULL){
-  #attention: df.final. rows are features(eg.metabolites), columns are samples.
-  #groups is a vector of strings or numbers specifies patterns of variables. 
-  #it needs to be the same length as variables. same pattern gives the same tag.
-  #R is the number of permutations
-  #scores are normalised to 1 instead of loadings
-  # lev.lim <- leverage.lims(df.final,R=R,FUN = ASCA.2f_leverage,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
-  # spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.01)[[2]]
-  # asca.fit_leverage <- ASCA.2f_leverage(t(df.final),Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,showvar = F, showscree = F)
-  # leverage <- asca.fit_leverage$Model.bab$leverage
-  # spe <- asca.fit$Model.bab$SPE
-  # lev.spe.toplot <- data.frame(leverage=leverage,spe=spe)
-  # lev.spe.toplot$metabolites <- rownames(df.final)
-  # lev.spe.toplot$groups <- groups
-  asca.fitted <- fitted(df.fial,asca,fit,groups,R)
-  
-  
+plot.leverage_spe <- function(asca.fitted, No.sample=NULL){
   plot <- ggplot(data = asca.fitted$stats_for_plot,aes(x=leverage,y=spe,color=groups))+
     geom_point()+
     geom_hline(yintercept = asca.fitted$spe_lim)+
     geom_vline(xintercept = asca.fitted$lev_limit)+
     #geom_text(aes(label=c(1,2,3,rep('',100)),hjust=-1.2))+
     labs(title = paste('improved leverage and SPE with',ncol(asca.fit$Model.bab$scores),'PCs'),
-         subtitle = paste('total Nr.variables:',each))+
+         subtitle = paste('total Nr.variables:',nrow(asca.fitted$stats_for_plot)))+
     theme(legend.text = element_text(size=5),legend.key.size = unit(0.1,'cm'))
   print(plot)
-  output <- list(groups[leverage>asca.fitted$lev_limit],which(asca.fit$Model.bab$SPE>spe.lim))
-  names(output) <- c('metabolites>leverage_lim','metabolites>spe_lim')
-  output
-  #lev.spe.toplot
 }
 ######fitted asca_gene data frame######
-fitted <- function(df.final,asca.fit,groups,R){
-  lev.lim <- leverage.lims(df.final,R=R,FUN = ASCA.2f_leverage,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
+fitted <- function(df.final,asca.fit,groups,R,which_leverage){
+  #attention: df.final. rows are features(eg.metabolites), columns are samples.
+  #groups is a vector of strings or numbers specifies patterns of variables. 
+  #it needs to be the same length as variables. same pattern gives the same tag.
+  #R is the number of permutations
+  #which_leverage argument: improved leverage is 'ASCA.2f_leverage'. original leverage is 'ASCA.2f'
+  
+  ##original leverage loading normalised to 1
+  ##improved leverage scores normalised to 1
+  lev.lim <- leverage.lims(df.final,R=R,FUN = which_leverage,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
   spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.01)[[2]]
-  asca.fit_leverage <- ASCA.2f_leverage(t(df.final),Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,showvar = F, showscree = F)
+  asca.fit_leverage <- which_leverage(t(df.final),Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,showvar = F, showscree = F)
   leverage <- asca.fit_leverage$Model.bab$leverage
   spe <- asca.fit$Model.bab$SPE
   lev.spe.toplot <- data.frame(leverage=leverage,spe=spe)
   lev.spe.toplot$metabolites <- rownames(df.final)
   lev.spe.toplot$groups <- groups
+  lev.spe.toplot$predicted <- (leverage>lev.lim)
+  lev.spe.toplot$truth <- (groups != 'flat')
   output <- list(lev.lim,spe.lim,lev.spe.toplot)
   names(output) <- c('lev_limit','spe_lim','stats_for_plot')
   output
 }
 ########stats###########
-stats <- function(){
-  
+stats <- function(fitted.data){
+  FP <- sum(fitted.data$predicted&!fitted.data$truth)
+  FN <- sum(!fitted.data$predicted&fitted.data$truth)
+  TP <- sum(fitted.data$predicted&fitted.data$truth)
+  TN <- sum(!fitted.data$predicted&!fitted.data$truth)
+  output <- list(TP,TN,FP,FN)
+  names(output) <- c('TP','TN','FP','FN')
+  output
 }
 
 #plot.leverage_spe(df.final,asca.fit, groups)
