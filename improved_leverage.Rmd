@@ -45,8 +45,11 @@ y32 <- c(tre1)
 
 #total of 100 metabolites(columns)
 #total of 2*5*4=40 rows
-
-simulation <- generate_data.nocorrelation()
+p1 <- 15
+p2 <- 15
+p3 <- 1
+neg <- 50
+simulation <- generate_data.nocorrelation(p1,p2,p3,neg)
 df.final <- simulation$df
 groups <- simulation$groups
 ```
@@ -76,7 +79,7 @@ asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, 
 ```
 
 ```{r leverage and spe plot}
-plot.leverage_spe_original(df.final,asca.fit,groups,R=20)
+plot.leverage_spe_original(df.final,asca.fit,groups,R=1,No.sample = 50)
 ```
 
 ###As expected, with 1 PC selected for submodel treatment and submodel interaction, leverage cutoff line set excluded all of the variabes to be significant.
@@ -121,7 +124,8 @@ plot.submodels_loading(asca.fit.normedld,groups,title="unormed loading for submo
 
 
 ```{r improved leverage,results=F}
-plot.leverage_spe(df.final,asca.fit,groups,R=20)
+leverage_spe <- plot.leverage_spe(df.final,asca.fit,groups,R=1)
+leverage_spe$`metabolites>leverage_lim` %notin% groups[1:(p1+p2+p3)]
 ```
 
 ###the new loading and leverage and spe plot are shown above. simulation data are correctly indentified as designed.

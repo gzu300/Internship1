@@ -1,0 +1,85 @@
+---
+title: "effect"
+author: "zhu"
+date: "26/12/2018"
+output: pdf_document
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = F,message = F,warning = F)
+```
+```{r source}
+source(file = 'utils.R')
+```
+```{r data}
+set.seed(999)
+####pipeline#####
+i=2#treatment
+j=6#time
+r=4#replicate
+time=c(0,1,2,3,4,5)#time points
+#y1 <- 0.01*time+0.01*time^2+0.01*time^3+0.01*time^4
+ctrl <- 0.4*time
+tre1 <- -0.4*time
+tre2 <- -0.2*((time-2.5)^2)+0.5
+tre3 <- c(0,0.3,1,0.4,0.6,2)
+notrend <- rep(0,6)
+y1 <- c(notrend)
+y12 <- c(tre1)
+
+y2 <- c(notrend)
+y22 <- c(tre1)
+
+y3 <- c(notrend)
+y32 <- c(tre1)
+#y12 <- 0.01*time^2
+
+#y2 <- -time
+
+#y3 <- c(-2,-1,0,0,1,2)
+# y1 <- c(0,1,2,3,4,5)
+#y32 <- 0.01*time^2
+#y3 <- -0.01*time^3
+
+#total of 100 metabolites(columns)
+#total of 2*5*4=40 rows
+```
+```{r}
+N <- c(50,100,200,500,2000)
+for (each in N){
+  simulation <- generate_data.nocorrelation(15,15,1,each)
+  df.final <- simulation$df
+  groups <- simulation$groups
+  #design matrix
+  mx <- asca.design.matrix(i,j,r,time)
+  #fit model
+  type=1
+  Fac=c(1,1,1,1)
+  asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = F)
+  plot.leverage_spe_original(df.final,asca.fit,groups,R=1,No.sample=each)
+}
+```
+
+```{r effect plot for FP}
+
+```
+
+
+```{r}
+for (each in N){
+  simulation <- generate_data.nocorrelation(15,15,1,each)
+  df.final <- simulation$df
+  groups <- simulation$groups
+  #design matrix
+  mx <- asca.design.matrix(i,j,r,time)
+  #fit model
+  type=1
+  Fac=c(1,1,1,1)
+  asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = F)
+  plot.leverage_spe(df.final,asca.fit,groups,R=1,No.sample=each)
+}
+```
+
+
+
+

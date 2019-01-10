@@ -23,25 +23,17 @@ set.seed(999)
 #y1 <- 0.01*time+0.01*time^2+0.01*time^3+0.01*time^4
 ctrl <- 0.01*time+0.1
 tre1 <- -0.01*time-0.1
-y1 <- c(ctrl)
-y12 <- c(tre1)
+fluctuate <- c(2,-2,2,-2,2,-2)
+notrend <- rep(0,6)
+y1 <- c(notrend)
+y12 <- fluctuate
 
-y2 <- c(ctrl)
-y22 <- c(tre1)
+y2 <- c(notrend)
+y22 <- fluctuate
 
-y3 <- c(ctrl)
-y32 <- c(tre1)
-#y12 <- 0.01*time^2
+y3 <- c(notrend)
+y32 <- fluctuate
 
-#y2 <- -time
-
-#y3 <- c(-2,-1,0,0,1,2)
-# y1 <- c(0,1,2,3,4,5)
-#y32 <- 0.01*time^2
-#y3 <- -0.01*time^3
-
-#total of 100 metabolites(columns)
-#total of 2*5*4=40 rows
 source('utils.R')
 simulation <- generate_data.highcorrelation()
 df.final <- simulation$df
@@ -66,7 +58,7 @@ There are 21 metabolites with the differential expression shown in the above lin
 
 ```{r check correlation,include=F}
 #cov(t(df.final[c(1,11,21,31),]))
-knitr::kable(cor(t(df.final[1:6,])),caption = 'correlations')
+knitr::kable(cor(t(df.final[19:24,])),caption = 'correlations')
 ```
 
 
@@ -75,7 +67,7 @@ knitr::kable(cor(t(df.final[1:6,])),caption = 'correlations')
 mx <- asca.design.matrix(i,j,r,time)
 #fit model
 type=1
-Fac=c(1,1,2,1)
+Fac=c(1,1,1,1)
 asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = T)
 print(asca.fit$Model.bab$var.exp)
 ```
@@ -87,13 +79,8 @@ ab <- asca.fit$Model.ab$data
 plot(rep(1:6,2),ab[,1])
 ```
 
-```{r original leverage and spe plot}
-plot.leverage_spe_original(df.final,asca.fit,groups,1)
-```
-
-
 ```{r leverage and spe plot}
-plot.leverage_spe(df.final,asca.fit,groups,20)
+leverages_spe <- plot.leverage_spe(df.final,asca.fit,groups,20)
 ```
 
 With 2 PCs selected, 10 out of 12 differential expressed metabolites corrected identified, fall into right-bottom quadrant.
@@ -108,11 +95,18 @@ score plot of submodel b.ab shows a clear seperation between treatment1 and trea
 plot.submodels_loading(asca.fit,groups)
 ```
 
+```{r residual plot}
+residuals <- asca.fit$Model.bab$data-(asca.fit$Model.bab$scores%*%t(asca.fit$Model.bab$loadings))
+matplot(residuals[,leverages_spe[[2]]],type='l',col = 'red')
+matplot(residuals[,-leverages_spe[[2]]],type = 'l',col = 'grey',add=T)
+```
+
+
 loading plot shows differentially expressed metabolites making high contribution in this pc.
 
 ```{r masigpro design matrix and fit,results=T}
 masigpro.design <- design_matrix(i,j,r,time)
-design <- make.design.matrix(edesign = masigpro.design,degree = 4)
+design <- make.design.matrix(edesign = masigpro.design,degree = 5)
 dis <- design$dis
 edesign <- design$edesign
 colnames(df.final) <- rownames(edesign)

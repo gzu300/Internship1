@@ -13,7 +13,7 @@ setwd('../')
 ######
 #generate data
 ######
-generate_data.nocorrelation <- function(){
+generate_data.nocorrelation <- function(p1,p2,p3,neg){
   #6 time points;2 treatments;4 replicates
   #no correlation between metabolites
   tc.GENE <- function(n, r,
@@ -42,17 +42,17 @@ generate_data.nocorrelation <- function(){
     }
     tc.dat
   }
-  one <- tc.GENE(15,4,
+  one <- tc.GENE(p1,4,
                  #a1=y1[1],b1=y1[2],c1=y1[3],d1=y1[4],e1=y1[5],
                  #a2=y1.t[1],b2=y1.t[2],c2=y1.t[3],d2=y1.t[4],e2=y1.t[5],
                  a3=y1[1],b3=y1[2],c3=y1[3],d3=y1[4],e3=y1[5],f3=y1[6],
                  a4=y12[1],b4=y12[2],c4=y12[3],d4=y12[4],e4=y12[5],f4=y12[6])
-  two <- tc.GENE(15,4,
+  two <- tc.GENE(p2,4,
                  #a1=y1[1],b1=y1[2],c1=y1[3],d1=y1[4],e1=y1[5],
                  #a2=y1.t[1],b2=y1.t[2],c2=y1.t[3],d2=y1.t[4],e2=y1.t[5],
                  a3=y2[1],b3=y2[2],c3=y2[3],d3=y2[4],e3=y2[5],
                  a4=y22[1],b4=y22[2],c4=y22[3],d4=y22[4],e4=y22[5],f4=y22[6])
-  three <- tc.GENE(1,4,
+  three <- tc.GENE(p3,4,
                    #a1=y1[1],b1=y1[2],c1=y1[3],d1=y1[4],e1=y1[5],
                    #a2=0.2+y2[1],b2=0.2+y2[2],c2=0.2+y2[3],d2=0.2+y2[4],e2=0.2+y2[5],
                    a3=y3[1],b3=y3[2],c3=y3[3],d3=y3[4],e3=y3[5],f3=y3[6],
@@ -62,7 +62,7 @@ generate_data.nocorrelation <- function(){
   #                  a2=y1[1],b2=y1[2],c2=y1[3],d2=y1[4],e2=y1[5],
   #                  a3=y2[1],b3=y2[2],c3=y2[3],d3=y2[4],e3=y2[5],
   #                  a4=y2[1],b4=y2[2],c4=y2[3],d4=y2[4],e4=y2[5])
-  flat <- tc.GENE(50,4)
+  flat <- tc.GENE(neg,4)
   df.final <- rbind(one,two,three,flat)
   groups <- c(rep('one',nrow(one)),rep('two',nrow(two)),rep('three',nrow(three))
               ,rep('flat',nrow(flat)))
@@ -158,7 +158,7 @@ asca.design.matrix <- function(i,j,r,time){
 #plot
 ######
 #leveragevsspe
-plot.leverage_spe_original <- function(df.final,asca.fit,groups, R=1){
+plot.leverage_spe_original <- function(df.final,asca.fit,groups, R=1,No.sample=NULL){
   #original leverage normalised to 1
   lev.lim <- leverage.lims(df.final,R=R,FUN = ASCA.2f,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
   spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.01)[[2]]
@@ -173,7 +173,8 @@ plot.leverage_spe_original <- function(df.final,asca.fit,groups, R=1){
     geom_hline(yintercept = spe.lim)+
     geom_vline(xintercept = lev.lim)+
     #geom_text(aes(label=c(1,2,3,rep('',100)),hjust=-1.2))+
-    labs(title = paste('original leverage and SPE with',ncol(asca.fit$Model.bab$scores),'PCs'))+
+    labs(title = paste('improved leverage and SPE with',ncol(asca.fit$Model.bab$scores),'PCs'),
+         subtitle = paste('total Nr.variables:',each))+
     theme(legend.text = element_text(size=5),legend.key.size = unit(0.1,'cm'))
   print(plot)
   output <- groups[leverage>lev.lim]
@@ -181,12 +182,39 @@ plot.leverage_spe_original <- function(df.final,asca.fit,groups, R=1){
   #lev.spe.toplot
 }
 
-plot.leverage_spe <- function(df.final,asca.fit,groups=NULL, R=1){
+plot.leverage_spe <- function(df.final,asca.fit,groups=NULL, R=1, No.sample=NULL){
   #attention: df.final. rows are features(eg.metabolites), columns are samples.
   #groups is a vector of strings or numbers specifies patterns of variables. 
   #it needs to be the same length as variables. same pattern gives the same tag.
   #R is the number of permutations
   #scores are normalised to 1 instead of loadings
+  # lev.lim <- leverage.lims(df.final,R=R,FUN = ASCA.2f_leverage,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
+  # spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.01)[[2]]
+  # asca.fit_leverage <- ASCA.2f_leverage(t(df.final),Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,showvar = F, showscree = F)
+  # leverage <- asca.fit_leverage$Model.bab$leverage
+  # spe <- asca.fit$Model.bab$SPE
+  # lev.spe.toplot <- data.frame(leverage=leverage,spe=spe)
+  # lev.spe.toplot$metabolites <- rownames(df.final)
+  # lev.spe.toplot$groups <- groups
+  asca.fitted <- fitted(df.fial,asca,fit,groups,R)
+  
+  
+  plot <- ggplot(data = asca.fitted$stats_for_plot,aes(x=leverage,y=spe,color=groups))+
+    geom_point()+
+    geom_hline(yintercept = asca.fitted$spe_lim)+
+    geom_vline(xintercept = asca.fitted$lev_limit)+
+    #geom_text(aes(label=c(1,2,3,rep('',100)),hjust=-1.2))+
+    labs(title = paste('improved leverage and SPE with',ncol(asca.fit$Model.bab$scores),'PCs'),
+         subtitle = paste('total Nr.variables:',each))+
+    theme(legend.text = element_text(size=5),legend.key.size = unit(0.1,'cm'))
+  print(plot)
+  output <- list(groups[leverage>asca.fitted$lev_limit],which(asca.fit$Model.bab$SPE>spe.lim))
+  names(output) <- c('metabolites>leverage_lim','metabolites>spe_lim')
+  output
+  #lev.spe.toplot
+}
+######fitted asca_gene data frame######
+fitted <- function(df.final,asca.fit,groups,R){
   lev.lim <- leverage.lims(df.final,R=R,FUN = ASCA.2f_leverage,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
   spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.01)[[2]]
   asca.fit_leverage <- ASCA.2f_leverage(t(df.final),Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,showvar = F, showscree = F)
@@ -195,18 +223,13 @@ plot.leverage_spe <- function(df.final,asca.fit,groups=NULL, R=1){
   lev.spe.toplot <- data.frame(leverage=leverage,spe=spe)
   lev.spe.toplot$metabolites <- rownames(df.final)
   lev.spe.toplot$groups <- groups
-  
-  plot <- ggplot(data = lev.spe.toplot,aes(x=leverage,y=spe,color=groups))+
-    geom_point()+
-    geom_hline(yintercept = spe.lim)+
-    geom_vline(xintercept = lev.lim)+
-    #geom_text(aes(label=c(1,2,3,rep('',100)),hjust=-1.2))+
-    labs(title = paste('improved leverage and SPE with',ncol(asca.fit$Model.bab$scores),'PCs'))+
-    theme(legend.text = element_text(size=5),legend.key.size = unit(0.1,'cm'))
-  print(plot)
-  output <- groups[leverage>lev.lim]
+  output <- list(lev.lim,spe.lim,lev.spe.toplot)
+  names(output) <- c('lev_limit','spe_lim','stats_for_plot')
   output
-  #lev.spe.toplot
+}
+########stats###########
+stats <- function(){
+  
 }
 
 #plot.leverage_spe(df.final,asca.fit, groups)
