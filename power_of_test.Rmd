@@ -44,42 +44,84 @@ y32 <- c(tre1)
 #total of 100 metabolites(columns)
 #total of 2*5*4=40 rows
 ```
-```{r}
-N <- c(50,100,200,500,2000)
-for (each in N){
-  simulation <- generate_data.nocorrelation(15,15,1,each)
-  df.final <- simulation$df
-  groups <- simulation$groups
-  #design matrix
-  mx <- asca.design.matrix(i,j,r,time)
-  #fit model
-  type=1
-  Fac=c(1,1,1,1)
-  asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = F)
-  asca.fitted.original <- fitted(df.final,asca.fit,groups,1,ASCA.2f)
-  plot.leverage_spe(asca.fitted.original)
-  print(data.frame(stats(asca.fitted.original$stats_for_plot)))
+
+```{r plot raw data metabolite one}
+trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=generate_data.same_var(p1 = 15,p2 = 15,p3 = 1,neg = 100,var = 0.2)$df[1,])
+ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
+  geom_point()+
+  stat_summary(fun.y = mean,geom = 'line')+
+  labs(title = 'differentially expressed variable')
+```
+
+```{r effect of variance}
+#N <- c(50,100,200,1000)
+N <- c(0.2,0.4,0.8)
+#fit model
+type=1
+Fac=c(1,1,1,1)
+mx <- asca.design.matrix(i,j,r,time)
+effect_df <- function(which_leverage,plot=FALSE,p1 = 15,p2 = 15,p3 = 1,neg = 1000,var = 0.2){
+  effect_df <- data.frame(method=rep('asca_gene_original',each=length(N)),effects=N)
+  FPs <- vector()
+  FNs <- vector()
+  for (each in seq(N)){
+    simulation <- generate_data.same_var(p1 = p1,p2 = p2,p3 = p3,neg = neg,var = N[each])
+    #simulation <- generate_data.nocorrelation(15,15,1,each)
+    df.final <- simulation$df
+    groups <- simulation$groups
+    #design matrix
+    asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = F)
+    asca.fitted.original <- fitted(df.final,asca.fit,groups,1,which_leverage)
+    if (plot == TRUE){
+      plot.leverage_spe(asca.fitted.original,variance=N[each])
+    }
+    confusion_matrix <- stats(asca.fitted.original$stats_for_plot)
+    FPs[each] <- confusion_matrix$FP
+    FNs[each] <- confusion_matrix$FN
+  }
+  effect_df$FP <- FPs
+  effect_df$FN <- FNs
+  effect_df
 }
+effect_df <- effect_df(ASCA.2f,plot = T,var=N)
 ```
 
 ```{r effect plot for FP}
-
+ggplot(effect_df.original,aes(x=effects,y=FP))+
+  geom_line()
 ```
 
 
-```{r}
-for (each in N){
-  simulation <- generate_data.nocorrelation(15,15,1,each)
-  df.final <- simulation$df
-  groups <- simulation$groups
-  #design matrix
-  mx <- asca.design.matrix(i,j,r,time)
-  #fit model
-  type=1
-  Fac=c(1,1,1,1)
-  asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = F)
-  plot.leverage_spe(df.final,asca.fit,groups,R=1,No.sample=each)
+```{r effect of number of variables}
+N <- c(50,100,200,1000)
+#fit model
+type=1
+Fac=c(1,1,1,1)
+mx <- asca.design.matrix(i,j,r,time)
+effect_df <- function(which_leverage,plot=FALSE,p1 = 15,p2 = 15,p3 = 1,neg = 1000,var = 0.2){
+  effect_df <- data.frame(method=rep('asca_gene_original',each=length(N)),effects=N)
+  FPs <- vector()
+  FNs <- vector()
+  for (each in seq(N)){
+    simulation <- generate_data.same_var(p1 = p1,p2 = p2,p3 = p3,neg = N[each],var=var)
+    #simulation <- generate_data.nocorrelation(15,15,1,each)
+    df.final <- simulation$df
+    groups <- simulation$groups
+    #design matrix
+    asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = F)
+    asca.fitted.original <- fitted(df.final,asca.fit,groups,1,which_leverage)
+    if (plot == TRUE){
+      plot.leverage_spe(asca.fitted.original,variance=var)
+    }
+    confusion_matrix <- stats(asca.fitted.original$stats_for_plot)
+    FPs[each] <- confusion_matrix$FP
+    FNs[each] <- confusion_matrix$FN
+  }
+  effect_df$FP <- FPs
+  effect_df$FN <- FNs
+  effect_df
 }
+effect_df <- effect_df(ASCA.2f,plot = T,var=0.2,neg = N)
 ```
 
 

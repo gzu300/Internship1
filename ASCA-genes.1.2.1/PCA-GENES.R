@@ -49,7 +49,7 @@ PCA.GENES.unorm_loading<-function(X)
   
   eigen<-eigen(Xoff%*%t(Xoff)/(p-1))
   var<-cbind(eigen$values/sum(eigen$values),cumsum(eigen$values/sum(eigen$values)))
-  print('performing PCA for leverage')
+  #print('performing PCA for leverage')
   
   scores.normed<-eigen$vectors# this c*cT's eigen vector which is actually normalized score in PCA.
   loading.unormed<-t(Xoff)%*%scores.normed#it's easy, thanks to this PCA function
