@@ -155,6 +155,14 @@ mx <- asca.design.matrix(i,j,r,time)
 effect_df.original <- effect(ASCA.2f,plot = F,var=0.2,neg = N,method = 'asca_original',effect = 'variables')
 effect_df.improved <- effect(ASCA.2f_leverage,plot = F,var=0.2,neg=N,method = 'asca_improved',effect = 'variables')
 ```
+```{r}
+ggplot(effect_df.original,aes(x=effects,y=FN,colour=method))+
+  geom_line()+
+  geom_line(data = effect_df.improved,aes(x=effects,y=FN))
+ggplot(effect_df.original,aes(x=effects,y=FP,colour=method))+
+  geom_line()+
+  geom_line(data = effect_df.improved,aes(x=effects,y=FP))
+```
 
 
 

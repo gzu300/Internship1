@@ -73,11 +73,11 @@ plot_a_metabolite(df.final,median,"Adenosine")
 
 
 ```{r 28:55,include=F}
-plot_metabolites(28:55)
+#plot_metabolites(28:55)
 ```
 
 ```{r,include=F}
-plot_a_metabolite("CMP")
+#plot_a_metabolite("CMP")
 ```
 
 
@@ -101,15 +101,18 @@ PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design
 ```{r}
 mx <- asca.design.matrix(i,j,r,time)
 
-source('ASCA-genes.1.2.1/sourceASCA_mac.R')
-asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = 1, Fac = c(1,2,2,2))
+source('ASCA-genes.1.2.1/sourceASCA.R')
+asca.fit <- ASCA.2f_leverage(X = t(df.final),Designa = mx$j, Designb = mx$i,type = 1, Fac = c(1,2,2,2))
 Fac=c(1,2,2,2)
 type=1
 ```
 
 ```{r,results=T}
-asca.selected <- plot.leverage_spe(df.final,asca.fit,colnames,2)
+asca.fitted <- fitted(df.final,asca.fit,colnames,2,ASCA.2f_leverage)
+asca.selected <- plot.leverage_spe(asca.fitted,2)
 print(asca.selected)
+colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]
+
 ```
 ```{r}
 plot.submodels_score(asca.fit,i,j)

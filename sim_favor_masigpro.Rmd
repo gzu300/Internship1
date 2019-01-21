@@ -24,7 +24,7 @@ r=4#replicate
 time=c(0,1,2,3,4,5)#time points
 #y1 <- 0.01*time+0.01*time^2+0.01*time^3+0.01*time^4
 ctrl <- 0.4*time
-tre1 <- -0.4*time
+tre1 <- c(0,1.5,-1.5,1.5,-1.5,0)
 tre2 <- -0.2*((time-2.5)^2)+0.5
 tre3 <- c(0,0.3,1,0.4,0.6,2)
 notrend <- rep(0,6)
@@ -48,7 +48,7 @@ y32 <- c(tre1)
 #total of 100 metabolites(columns)
 #total of 2*5*4=40 rows
 
-simulation <- generate_data.nocorrelation()
+simulation <- generate_data.same_var(p1 = 10,p2 = 10,p3 = 1,neg = 100,var=0.2)
 df.final <- simulation$df
 groups <- simulation$groups
 ```
@@ -80,7 +80,7 @@ ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
 
 ```{r check correlation,include=F}
 #cov(t(df.final[c(1,11,21,31),]))
-knitr::kable(cor(t(df.final[29:34,])),caption = 'correlations')
+knitr::kable(cor(t(df.final[18:23,])),caption = 'correlations')
 ```
 
 
@@ -92,7 +92,7 @@ dis <- design$dis
 edesign <- design$edesign
 colnames(df.final) <- rownames(edesign)
 
-masigpro.fit <- maSigPro(df.final,masigpro.design,degree=4,step.method = 'backward')
+masigpro.fit <- maSigPro(df.final,masigpro.design,degree=4,step.method = 'forward')
 toplot <- rownames(masigpro.fit$summary)
 ```
 ```{r masigpro summary}
@@ -114,7 +114,8 @@ asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, 
 Screeplot shows that 1 PC to be included for submodel b.ab(treatment+interaction).
 
 ```{r leverage and spe plot}
-plot.leverage_spe(df.final,asca.fit,groups,R=1)
+fitted <- fitted(df.final,asca.fit,groups,1,ASCA.2f_leverage)
+plot.leverage_spe(fitted,0.2)
 ```
 
 With 1 PCs selected, all the patterns are within the leverage limits.
