@@ -101,11 +101,18 @@ PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design
 ```{r}
 mx <- asca.design.matrix(i,j,r,time)
 
-source('ASCA-genes.1.2.1/sourceASCA.R')
-asca.fit <- ASCA.2f_leverage(X = t(df.final),Designa = mx$j, Designb = mx$i,type = 1, Fac = c(1,2,2,2))
-Fac=c(1,2,2,2)
+Fac=c(1,1,3,2)
 type=1
+source('ASCA-genes.1.2.1/sourceASCA.R')
+asca.fit <- ASCA.2f_leverage(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
 ```
+
+```{r}
+source('RMSECV.R')
+rmsecv <- RMSECV(asca.fit$Model.ab$data,10,5)
+rmsecv
+```
+
 
 ```{r,results=T}
 asca.fitted <- fitted(df.final,asca.fit,colnames,2,ASCA.2f_leverage)

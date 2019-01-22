@@ -14,19 +14,18 @@ knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
 ```
 ```{r}
 source('utils.R')
-```
-```{r data}
-set.seed(999)
+
+
 ####pipeline#####
 i=2#treatment
 j=6#time
 r=4#replicate
 time=c(0,1,2,3,4,5)#time points
 #y1 <- 0.01*time+0.01*time^2+0.01*time^3+0.01*time^4
-ctrl <- 0.4*time
+ctrl <- -0.1*(time-3)^2+0.5
 tre1 <- c(0,1.5,-1.5,1.5,-1.5,0)
 tre2 <- -0.2*((time-2.5)^2)+0.5
-tre3 <- c(0,0.3,1,0.4,0.6,2)
+tre3 <- c(-0.8,0,0.8,0.8,0,-0.8)
 notrend <- rep(0,6)
 y1 <- c(notrend)
 y12 <- c(notrend)
@@ -34,21 +33,12 @@ y12 <- c(notrend)
 y2 <- c(notrend)
 y22 <- c(notrend)
 
-y3 <- c(notrend)
-y32 <- c(tre1)
-#y12 <- 0.01*time^2
+y3 <- c(tre3-c(0.1,0.2,0.2,0.2,0.2,0.3))
+y32 <- c(tre3)
 
-#y2 <- -time
+set.seed(1)
+simulation <- generate_data.same_var(p1 = 10,p2 = 10,p3 = 1,neg = 35,var=0.2)
 
-#y3 <- c(-2,-1,0,0,1,2)
-# y1 <- c(0,1,2,3,4,5)
-#y32 <- 0.01*time^2
-#y3 <- -0.01*time^3
-
-#total of 100 metabolites(columns)
-#total of 2*5*4=40 rows
-
-simulation <- generate_data.same_var(p1 = 10,p2 = 10,p3 = 1,neg = 100,var=0.2)
 df.final <- simulation$df
 groups <- simulation$groups
 ```
@@ -114,54 +104,11 @@ asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, 
 Screeplot shows that 1 PC to be included for submodel b.ab(treatment+interaction).
 
 ```{r leverage and spe plot}
-fitted <- fitted(df.final,asca.fit,groups,1,ASCA.2f_leverage)
+fitted <- fitted(df.final,asca.fit,groups,2,ASCA.2f_leverage)
 plot.leverage_spe(fitted,0.2)
 ```
 
-With 1 PCs selected, all the patterns are within the leverage limits.
-
-```{r score plot}
-plot.submodels_score(asca.fit,i,j)
-```
-
-score plot of submodel b.ab shows a clear seperation between treatment1 and treatment2. 
-
-```{r look at extra pcs,include=F}
-Fac.extrapc=c(1,2,3,1)
-asca.fit_extrapc <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac.extrapc,showvar = F,showscree = F)
-```
-```{r loading plot}
-plot.submodels_loading(asca.fit,groups)
-```
-
-
-```{r leverage spe extra pc,include=F}
-plot.leverage_spe(df.final,asca.fit_extrapc,groups,10)
-```
-
-
-```{r score plot extra pc,include=F}
-plot.submodels_score(asca.fit_extrapc,i,j)
-```
-
-
-```{r residual plot,include=F}
-residuals <- asca.fit_extrapc$Model.bab$data-(asca.fit_extrapc$Model.bab$scores%*%t(asca.fit_extrapc$Model.bab$loadings))
-matplot(residuals[,21],type='l',col = 'red')
-matplot(residuals[,-21],type = 'l',col = 'black',add=T)
-```
-
-```{r unormed loading}
-a <- plot.leverage_spe(df.final,asca.fit,groups,10)
-```
-```{r}
-b <- plot.leverage_spe_original(df.final,asca.fit,groups,10)
-```
-
-```{r}
-asca.fit.normedld <- ASCA.2f_leverage(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac.extrapc,showvar = F,showscree = T)
-plot.submodels_loading(asca.fit.normedld,groups)
-```
+ß
 
 
 

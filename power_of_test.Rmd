@@ -55,7 +55,7 @@ ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
 
 ```{r effect of variance}
 #N <- c(50,100,200,1000)
-N <- c(0.2,0.4,0.8)
+N <- c(0.2,0.4,0.8,1,1.2,1.4,1.6)
 #fit model
 type=1
 Fac=c(1,1,1,1)
@@ -83,12 +83,21 @@ effect_df <- function(which_leverage,plot=FALSE,p1 = 15,p2 = 15,p3 = 1,neg = 100
   effect_df$FN <- FNs
   effect_df
 }
-effect_df <- effect_df(ASCA.2f,plot = T,var=N)
+effect_var.original <- effect_df(ASCA.2f,plot = T,var=N)
+effect_var.improved <- effect_df(ASCA.2f_leverage,plot = T, var=N)
 ```
 
 ```{r effect plot for FP}
-# ggplot(effect_df.original,aes(x=effects,y=FP))+
-#   geom_line()
+effect_var.improved$method <- 'asca_gene_improved'
+ggplot(effect_var.improved,aes(x=effects,y=FP,colour=method))+
+  geom_line()+
+  geom_line(data = effect_var.original,aes(x=effects,y=FP))
+```
+
+```{r}
+ggplot(effect_var.improved,aes(x=effects,y=FN,colour=method))+
+  geom_line()+
+  geom_line(data = effect_var.original,aes(x=effects,y=FN))
 ```
 
 
