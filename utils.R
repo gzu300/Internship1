@@ -156,31 +156,30 @@ asca.design.matrix <- function(i,j,r,time){
 #plot
 ######
 #leveragevsspe
-# plot.leverage_spe_original <- function(df.final,asca.fit,groups, R=1,No.sample=NULL){
-#   ###########
-#   #OBLOSETED#
-#   ###########
-#   #original leverage normalised to 1
-#   # lev.lim <- leverage.lims(df.final,R=R,FUN = ASCA.2f,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
-#   # spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.01)[[2]]
-#   # leverage <- asca.fit$Model.bab$leverage
-#   # spe <- asca.fit$Model.bab$SPE
-#   # lev.spe.toplot <- data.frame(leverage=leverage,spe=spe)
-#   # lev.spe.toplot$metabolites <- rownames(df.final)
-#   # lev.spe.toplot$groups <- groups
-#   plot <- ggplot(data = lev.spe.toplot,aes(x=leverage,y=spe,color=groups))+
-#     geom_point()+
-#     geom_hline(yintercept = spe.lim)+
-#     geom_vline(xintercept = lev.lim)+
-#     #geom_text(aes(label=c(1,2,3,rep('',100)),hjust=-1.2))+
-#     labs(title = paste('improved leverage and SPE with',ncol(asca.fit$Model.bab$scores),'PCs'),
-#          subtitle = paste('total Nr.variables:',each))+
-#     theme(legend.text = element_text(size=5),legend.key.size = unit(0.1,'cm'))
-#   print(plot)
-#   output <- groups[leverage>lev.lim]
-#   output
-#   #lev.spe.toplot
-# }
+plot.leverage_spe_original <- function(df.final,asca.fit,groups, R=1,No.sample=NULL){
+  ###########
+  #OBLOSETED#
+  ###########
+  #original leverage normalised to 1
+  lev.lim <- leverage.lims(df.final,R=R,FUN = ASCA.2f_leverage,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
+  spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.01)[[2]]
+  leverage <- asca.fit$Model.bab$leverage
+  spe <- asca.fit$Model.bab$SPE
+  lev.spe.toplot <- data.frame(leverage=leverage,spe=spe)
+  lev.spe.toplot$metabolites <- rownames(df.final)
+  lev.spe.toplot$groups <- groups
+  plot <- ggplot(data = lev.spe.toplot,aes(x=leverage,y=spe,color=groups))+
+    geom_point()+
+    geom_hline(yintercept = spe.lim)+
+    geom_vline(xintercept = lev.lim)+
+    #geom_text(aes(label=c(1,2,3,rep('',100)),hjust=-1.2))+
+    labs(title = paste('original leverage and SPE with',ncol(asca.fit$Model.bab$scores),'PCs'))+
+    theme(legend.text = element_text(size=5),legend.key.size = unit(0.1,'cm'))
+  print(plot)
+  output <- groups[leverage>lev.lim]
+  output
+  #lev.spe.toplot
+}
 
 plot.leverage_spe <- function(asca.fitted, variance){
   plot <- ggplot(data = asca.fitted$stats_for_plot,aes(x=leverage,y=spe,color=groups))+
@@ -261,5 +260,6 @@ plot.submodels_loading <- function(asca.fit,groups=NULL,title = paste('loading p
       theme(legend.text = element_text(size=5),legend.key.size = unit(0.1,'cm'))
     print(plot)
   }
+  bab.loadings
 }
 # plot.submodels_loading(asca.fit,groups)

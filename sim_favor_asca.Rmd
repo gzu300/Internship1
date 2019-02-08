@@ -35,7 +35,7 @@ y3 <- c(notrend)
 y32 <- fluctuate
 
 source('utils.R')
-simulation <- generate_data.highcorrelation()
+simulation <- generate_data.same_var(p1 = 10,p2 = 10,p3 = 1,neg = 35,var=0.2)
 df.final <- simulation$df
 groups <- simulation$groups
 ```
@@ -47,7 +47,7 @@ ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
   labs(title = 'pattern')
 ```
 ```{r plot raw data metabolite two}
-trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[201,])
+trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[31,])
 ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
   geom_point()+
   stat_summary(fun.y = mean,geom = 'line')+
@@ -80,7 +80,8 @@ plot(rep(1:6,2),ab[,1])
 ```
 
 ```{r leverage and spe plot}
-leverages_spe <- plot.leverage_spe(df.final,asca.fit,groups,20)
+asca.fitted <- fitted(df.final,asca.fit,groups,2,ASCA.2f_leverage)
+leverages_spe <- plot.leverage_spe(asca.fitted,0.2)
 ```
 
 With 2 PCs selected, 10 out of 12 differential expressed metabolites corrected identified, fall into right-bottom quadrant.

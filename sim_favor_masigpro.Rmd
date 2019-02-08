@@ -96,7 +96,7 @@ all the patterns are identified by masigpro.
 mx <- asca.design.matrix(i,j,r,time)
 #fit model
 type=1
-Fac=c(1,1,1,1)
+Fac=c(1,1,2,1)
 asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = T)
 #print(asca.fit$Model.bab$var.exp)
 ```

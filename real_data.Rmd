@@ -67,8 +67,8 @@ plot_metabolites(df.final,1:10)
 ```
 
 ```{r}
-plot_a_metabolite(df.final,mean,"Adenosine")
-plot_a_metabolite(df.final,median,"Adenosine")
+plot_a_metabolite(df.final.masigpro,mean,"Adenosine")
+plot_a_metabolite(df.final.masigpro,median,"Adenosine")
 ```
 
 
@@ -84,24 +84,35 @@ plot_a_metabolite(df.final,median,"Adenosine")
 ```{r,results=T}
 source('utils.R')
 masigpro.design <- design_matrix(i,j,r,time)
-design <- make.design.matrix(edesign = masigpro.design,degree = 2)
+degree <- 2
+design <- make.design.matrix(edesign = masigpro.design,degree = degree)
 dis <- design$dis
 edesign <- design$edesign
 colnames(df.final) <- rownames(edesign)
 
-masigpro.fit <- maSigPro(df.final,masigpro.design,degree=2)
+masigpro.fit <- maSigPro(df.final,masigpro.design,degree=degree)
 print(masigpro.fit$summary)
 toplot <- rownames(masigpro.fit$sig.genes$treatment2vstreatment1$sig.profiles)
 ```
 ```{r,include=F}
-AA <- df.final.masigpro["Itaconic acid",]
+AA <- df.final.masigpro["ADP",]
+PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector)
+```
+
+```{r,include=F}
+AA <- df.final.masigpro["AMP",]
+PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector)
+```
+
+```{r,include=F}
+AA <- df.final.masigpro["Arginine",]
 PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector)
 ```
 
 ```{r}
 mx <- asca.design.matrix(i,j,r,time)
 
-Fac=c(1,1,3,2)
+Fac=c(1,1,2,2)
 type=1
 source('ASCA-genes.1.2.1/sourceASCA.R')
 asca.fit <- ASCA.2f_leverage(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
@@ -109,7 +120,7 @@ asca.fit <- ASCA.2f_leverage(X = t(df.final),Designa = mx$j, Designb = mx$i,type
 
 ```{r}
 source('RMSECV.R')
-rmsecv <- RMSECV(asca.fit$Model.ab$data,10,5)
+rmsecv <- RMSECV(asca.fit$Model.bab$data,8,4)
 rmsecv
 ```
 
@@ -117,15 +128,49 @@ rmsecv
 ```{r,results=T}
 asca.fitted <- fitted(df.final,asca.fit,colnames,2,ASCA.2f_leverage)
 asca.selected <- plot.leverage_spe(asca.fitted,2)
-print(asca.selected)
-colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]
+print(sort(colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]))
+print(sort(masigpro.fit$summary[,2]))
 
+```
+
+in asca-gene but not masigpro
+
+```{r,include=F}
+AA <- df.final.masigpro["ADP",]
+PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'ADP')
+```
+
+```{r,include=F}
+AA <- df.final.masigpro["AMP",]
+PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'AMP')
+```
+
+```{r,include=F}
+AA <- df.final.masigpro["Arginine",]
+PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'Arginine')
+```
+
+```{r,include=F}
+AA <- df.final.masigpro["Cytidine",]
+PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'Cytidine')
+```
+
+in both
+
+```{r,include=F}
+AA <- df.final.masigpro["Tryptophan",]
+PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'Tryptophan')
+```
+
+```{r,include=F}
+AA <- df.final.masigpro["Ascorbic Acid",]
+PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'Ascorbic Acid')
 ```
 ```{r}
 plot.submodels_score(asca.fit,i,j)
 ```
 ```{r}
-plot.submodels_loading(asca.fit,colnames)
+loadings <- plot.submodels_loading(asca.fit,colnames)
 ```
 ```{r,include=F}
 matplot(asca.fit$Model.bab$data-asca.fit$Model.bab$scores%*%t(asca.fit$Model.bab$loadings),type = 'l')
