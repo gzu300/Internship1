@@ -3,6 +3,7 @@
 #simulation data
 ######
 library(tidyverse)
+library(purrr)
 #source('simulation_util.R')
 source('MaSigPro_util.R')
 source('ASCA-genes.1.2.1/sourceASCA.R')
