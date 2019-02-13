@@ -20,22 +20,40 @@ time=c(0,1,2,3,4,5)#time points
 White noise is N(0,0.2)
 ```{r trend}
 set.seed(999)
-#y1 <- 0.01*time+0.01*time^2+0.01*time^3+0.01*time^4
+# #y1 <- 0.01*time+0.01*time^2+0.01*time^3+0.01*time^4
+# ctrl <- 0.01*time+0.1
+# tre1 <- -0.01*time-0.1
+# fluctuate <- c(2,-2,2,-2,2,-2)
+# notrend <- rep(0,6)
+# y1 <- c(notrend)
+# y12 <- fluctuate
+# 
+# y2 <- c(notrend)
+# y22 <- fluctuate
+# 
+# y3 <- c(notrend)
+# y32 <- fluctuate
+
+rep <- 4
+sd <- 0.2
 ctrl <- 0.01*time+0.1
 tre1 <- -0.01*time-0.1
-fluctuate <- c(2,-2,2,-2,2,-2)
-notrend <- rep(0,6)
-y1 <- c(notrend)
-y12 <- fluctuate
+fluctuate <- list(2,-2,2,-2,2,-2)
+notrend <- rep(list(0),6)
+ctrl <- notrend
+tre1 <- fluctuate
+tre2 <- fluctuate
 
-y2 <- c(notrend)
-y22 <- fluctuate
-
-y3 <- c(notrend)
-y32 <- fluctuate
+trend1 <- append(ctrl,tre1)
+trend2 <- append(ctrl,tre2)
+trend3 <- append(ctrl,tre2)
+trend4 <- append(ctrl,ctrl)
+ftrs_in_pat <- list(30,30,1,100)
+pat_names <- list('one','two','three','flat')
 
 source('utils.R')
-simulation <- generate_data.same_var(p1 = 10,p2 = 10,p3 = 1,neg = 35,var=0.2)
+simulation <- create.simulation(pat_names.list = pat_names,ftrs_in_pat,rep,sd,trend1,trend2,trend3,trend4)
+# simulation <- generate_data.same_var(p1 = 10,p2 = 10,p3 = 1,neg = 35,var=0.2)
 df.final <- simulation$df
 groups <- simulation$groups
 ```
@@ -67,7 +85,7 @@ knitr::kable(cor(t(df.final[19:24,])),caption = 'correlations')
 mx <- asca.design.matrix(i,j,r,time)
 #fit model
 type=1
-Fac=c(1,1,1,1)
+Fac=c(1,1,2,1)
 asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = T)
 print(asca.fit$Model.bab$var.exp)
 ```
@@ -124,3 +142,8 @@ ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
   geom_point()+
   stat_summary(fun.y = mean,geom = 'line')
 ```
+```{r}
+source('utils.R')
+plots <- plot.submodels(asca.fitted,asca.fit,Fac)
+```
+
