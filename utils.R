@@ -177,35 +177,9 @@ asca.design.matrix <- function(i,j,r,time){
 ######
 #plot
 ######
-#leveragevsspe
-plot.leverage_spe_original <- function(df.final,asca.fit,groups, R=1,No.sample=NULL){
-  ###########
-  #OBLOSETED#
-  ###########
-  #original leverage normalised to 1
-  lev.lim <- leverage.lims(df.final,R=R,FUN = ASCA.2f_leverage,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
-  spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.01)[[2]]
-  leverage <- asca.fit$Model.bab$leverage
-  spe <- asca.fit$Model.bab$SPE
-  lev.spe.toplot <- data.frame(leverage=leverage,spe=spe)
-  lev.spe.toplot$metabolites <- rownames(df.final)
-  lev.spe.toplot$groups <- groups
-  plot <- ggplot(data = lev.spe.toplot,aes(x=leverage,y=spe,color=groups))+
-    geom_point()+
-    geom_hline(yintercept = spe.lim)+
-    geom_vline(xintercept = lev.lim)+
-    #geom_text(aes(label=c(1,2,3,rep('',100)),hjust=-1.2))+
-    labs(title = paste('original leverage and SPE with',ncol(asca.fit$Model.bab$scores),'PCs'))+
-    theme(legend.text = element_text(size=5),legend.key.size = unit(0.1,'cm'))
-  print(plot)
-  output <- groups[leverage>lev.lim]
-  output
-  #lev.spe.toplot
-}
-
 
 ######fitted asca_gene data frame######
-fitted <- function(df.final,asca.fit,groups,R){
+fitted <- function(df.final,asca.fit,groups,R,which_leverage){
   #attention: df.final. rows are features(eg.metabolites), columns are samples.
   #groups is a vector of strings or numbers specifies patterns of variables. 
   #it needs to be the same length as variables. same pattern gives the same tag.
@@ -214,22 +188,20 @@ fitted <- function(df.final,asca.fit,groups,R){
   
   ##original leverage loading normalised to 1
   ##improved leverage scores normalised to 1
+  
   lev.lim <- leverage.lims(df.final,R=R,FUN = which_leverage,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[2]]
   spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.01)[[2]]
-  asca.fit_leverage <- ASCA.2f_leverage(t(df.final),Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,showvar = F, showscree = F)
+  asca.fit_leverage <- which_leverage(t(df.final),Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,showvar = F, showscree = F)
   
   leverage <- asca.fit_leverage$Model.bab$leverage
-  leverage.original <- asca.fit$Model.bab$leverage
-  spe <- asca.fit$Model.bab$SPE
+  spe <- asca.fit_leverage$Model.bab$SPE
   #assemble datafram for ggplot2
   lev.spe.toplot <- data.frame(leverage=leverage,
-                               leverage.original=leverage.original,
                                spe=spe,
                                metabolites=1:nrow(df.final),
                                groups=groups,
                                predicted=(leverage>lev.lim),
-                               truth=(groups != 'flat'),
-                               score=asca.fit$Model.bab$scores
+                               truth=(groups != 'flat')
                                )
   output <- list(lev.lim,spe.lim,lev.spe.toplot)
   names(output) <- c('lev_limit','spe_lim','stats_for_plot')
@@ -254,19 +226,22 @@ plot.leverage_spe <- function(asca.fitted, sd=sd,title = paste('improved leverag
     geom_point()+
     geom_hline(yintercept = asca.fitted$spe_lim)+
     geom_vline(xintercept = asca.fitted$lev_limit)+
-    #geom_text(aes(label=c(1,2,3,rep('',100)),hjust=-1.2))+
     labs(title = title)+
     theme(legend.text = element_text(size=5),legend.key.size = unit(0.1,'cm'))
   plot
 }
+
 #score plot
 plot.submodels_score <- function(asca.fit,i,j,title = paste('score plot for submodel b.ab')){
   #plot score vs time of all the PCs for submodel b.ab
   scores <- asca.fit$Model.bab$scores
-  PCs <- ncol(scores)
-  bab.toplot <- data.frame(scores=scores,time=rep(time,i),treatments=rep(paste('treatment',1:i),each=j))
-  output <- as.vector(1:PCs,mode = 'list')
-  for (each in 1:PCs){
+  PCs <- 1:ncol(scores)
+  bab.toplot <- data.frame(scores=scores,
+                           time=rep(time,i),
+                           treatments=rep(paste('treatment',1:i),each=j))
+  output <- as.vector(PCs,mode = 'list') %>% 
+    set_names(paste('PC',PCs,sep = ''))
+  for (each in PCs){
     plot <- ggplot(data = bab.toplot,aes(x=time,y=bab.toplot[[each]],color=treatments))+
       geom_line()+
       ylab(label = paste('PC',each))+
@@ -275,18 +250,19 @@ plot.submodels_score <- function(asca.fit,i,j,title = paste('score plot for subm
   }
   output
 }
-#plot.submodels_score(asca.fit,i)
-  #loading plot
+
+#loading plot
 plot.submodels_loading <- function(asca.fit,groups=NULL,title = paste('loading plot for submodel b.ab')){
   #plot loadings for all the PCs
   #groups is a vector of strings or numbers specifies patterns of variables. 
   #it needs to be the same length as variables. same pattern gives the same tag.
-  bab.loadings <- data.frame(loading=asca.fit$Model.bab$loadings)
-  PCs <- ncol(bab.loadings)
-  bab.loadings$metabolites <- 1:nrow(bab.loadings)
-  bab.loadings$groups <- groups
-  output <- as.vector(1:PCs,mode = 'list')
-  for (each in 1:PCs){
+  bab.loadings <- data.frame(loading=asca.fit$Model.bab$loadings,
+                             metabolites=1:length(groups),
+                             groups = groups)
+  PCs <- 1:ncol(asca.fit$Model.bab$loadings)
+  output <- as.vector(PCs,mode = 'list') %>% 
+    set_names(paste('PC',PCs,sep = ''))
+  for (each in PCs){
     plot <- ggplot(bab.loadings,aes(x=metabolites,y=bab.loadings[[each]],fill=groups))+
       geom_bar(stat = 'identity',position = 'dodge')+
       ylab(paste('PC',each))+
@@ -297,7 +273,7 @@ plot.submodels_loading <- function(asca.fit,groups=NULL,title = paste('loading p
   output
 }
 
-plot.submodels <- function(asca.fitted,asca.fit, Fac=Fac...){
+plot.submodels <- function(asca.fitted,asca.fit, Fac=Fac){
   output <- list(leverage_spe=plot.leverage_spe(asca.fitted = asca.fitted),
                  scores=plot.submodels_score(asca.fit,i,j),
                  loadings=plot.submodels_loading(asca.fit,groups=groups))

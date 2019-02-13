@@ -98,7 +98,8 @@ plot(rep(1:6,2),ab[,1])
 ```
 
 ```{r leverage and spe plot}
-asca.fitted <- fitted(df.final,asca.fit,groups,2,ASCA.2f_leverage)
+asca.fitted <- fitted(df.final,asca.fit,groups,2,which_leverage = ASCA.2f_leverage)
+asca.fitted.original <- fitted(df.final,asca.fit,groups,2,which_leverage = ASCA.2f)
 leverages_spe <- plot.leverage_spe(asca.fitted,0.2)
 ```
 
@@ -125,8 +126,7 @@ loading plot shows differentially expressed metabolites making high contribution
 
 ```{r masigpro design matrix and fit,results=T}
 masigpro.design <- design_matrix(i,j,r,time)
-design <- make.design.matrix(edesign = masigpro.design,degree = 5)
-dis <- design$dis
+design <- make.design.matrix(edesign = masigpro.design,degree = 4)
 edesign <- design$edesign
 colnames(df.final) <- rownames(edesign)
 
