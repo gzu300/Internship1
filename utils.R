@@ -153,7 +153,7 @@ create.simulation <- function(pat_names.list,ftrs_in_pat.list,replicates,sd,...)
       matrix(.,nrow = length(trend_list[[1]])*replicates,dimnames = dimnames) %>% 
       t(.)
   }
-  wrap_tre <- wrap_tre(dimnames = dimnames,replicates = rep,sd = sd,trend1,trend2,trend3,trend4)
+  wrap_tre <- wrap_tre(dimnames = dimnames,replicates = rep,sd = sd,...)
   output <- list(df=wrap_tre,groups=dimnames[[2]])
   output
 }

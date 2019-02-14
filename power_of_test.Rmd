@@ -53,59 +53,17 @@ ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
   labs(title = 'differentially expressed variable')
 ```
 
-```{r effect of variance}
-#N <- c(50,100,200,1000)
-N <- c(0.2,0.4,0.8,1,1.2,1.4,1.6)
-#fit model
-type=1
-Fac=c(1,1,1,1)
-mx <- asca.design.matrix(i,j,r,time)
-effect_df <- function(which_leverage,plot=FALSE,p1 = 15,p2 = 15,p3 = 1,neg = 1000,var = 0.2){
-  effect_df <- data.frame(method=rep('asca_gene_original',each=length(N)),effects=N)
-  FPs <- vector()
-  FNs <- vector()
-  for (each in seq(N)){
-    simulation <- generate_data.same_var(p1 = p1,p2 = p2,p3 = p3,neg = neg,var = N[each])
-    #simulation <- generate_data.nocorrelation(15,15,1,each)
-    df.final <- simulation$df
-    groups <- simulation$groups
-    #design matrix
-    asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = F)
-    asca.fitted.original <- fitted(df.final,asca.fit,groups,1,which_leverage)
-    if (plot == TRUE){
-      plot.leverage_spe(asca.fitted.original,variance=N[each])
-    }
-    confusion_matrix <- stats(asca.fitted.original$stats_for_plot)
-    FPs[each] <- confusion_matrix$FP
-    FNs[each] <- confusion_matrix$FN
-  }
-  effect_df$FP <- FPs
-  effect_df$FN <- FNs
-  effect_df
-}
-effect_var.original <- effect_df(ASCA.2f,plot = T,var=N)
-effect_var.improved <- effect_df(ASCA.2f_leverage,plot = T, var=N)
-```
-
-```{r effect plot for FP}
-effect_var.improved$method <- 'asca_gene_improved'
-ggplot(effect_var.improved,aes(x=effects,y=FP,colour=method))+
-  geom_line()+
-  geom_line(data = effect_var.original,aes(x=effects,y=FP))
-```
-
 ```{r}
-ggplot(effect_var.improved,aes(x=effects,y=FN,colour=method))+
-  geom_line()+
-  geom_line(data = effect_var.original,aes(x=effects,y=FN))
-```
-
-
-```{r}
-effect <- function(which_leverage,plot=FALSE,
+effect <- function(which_leverage,
+                   plot=FALSE,
                    pat_names.list=pat_names,
-                   ftrs_in_pat.list=ftrs_in_pat,replicates=r,
-                   sd = sd,method='to_fill_in',effect,R=5,...){
+                   ftrs_in_pat.list=ftrs_in_pat,
+                   replicates=r,
+                   sd = sd,
+                   method='to_fill_in',
+                   effect,
+                   R=5,
+                   N=NULL,...){
   
   FPs <- vector()
   FNs <- vector()
@@ -117,7 +75,7 @@ effect <- function(which_leverage,plot=FALSE,
     for (each in seq(N)){
       ftrs_in_pat.list[[length(ftrs_in_pat.list)]] <- N[each]
       #simulation <- generate_data.same_var(p1 = p1,p2 = p2,p3 = p3,neg = N[each],var=sd)
-      simulation <- create.simulation(pat_names.list = pat_names.list,ftrs_in_pat.list = ftrs_in_pat.list,replicates = replicates,sd = sd)
+      simulation <- create.simulation(pat_names.list = pat_names.list,ftrs_in_pat.list = ftrs_in_pat.list,replicates = replicates,sd = sd,...)
       df.final <- simulation$df
       groups <- simulation$groups
       #design matrix
@@ -137,7 +95,7 @@ effect <- function(which_leverage,plot=FALSE,
   if (effect=='variances'){
     for (each in seq(N)){
       #simulation <- generate_data.same_var(p1 = p1,p2 = p2,p3 = p3,neg = neg,var=N[each])
-      simulation <- create.simulation(pat_names.list = pat_names.list,ftrs_in_pat.list = ftrs_in_pat.list,replicates = r,sd = N[each])
+      simulation <- create.simulation(pat_names.list = pat_names.list,ftrs_in_pat.list = ftrs_in_pat.list,replicates = r,sd = N[each],...)
       #simulation <- generate_data.nocorrelation(15,15,1,each)
       df.final <- simulation$df
       groups <- simulation$groups
@@ -166,11 +124,11 @@ effect <- function(which_leverage,plot=FALSE,
 }
 ```
 ```{r  effect of number of variables}
-r <- 4
-i <- 2
-j <- 6
-sd <- 0.2
-time=c(0,1,2,3,4,5)
+i=2#treatment
+j=6#time
+r=4#replicate
+time=c(0,1,2,3,4,5)#time points
+sd=0.2
 fluctuate <- list(2,-2,2,-2,2,-2)
 notrend <- rep(list(0),6)
 ctrl <- notrend
@@ -183,15 +141,35 @@ trend3 <- append(ctrl,tre2)
 trend4 <- append(ctrl,ctrl)
 ftrs_in_pat <- list(30,30,1,100)
 pat_names <- list('one','two','three','flat')
-N <- c(150,170,190,200,300,400,500,700,900,1000,2000,3000,3500,4000,4500,5000)
+N1 <- c(150,170,190,200,300,400,500,700,900,1000,2000,3000,3500,4000,4500,5000)
 N <- c(0.2,0.3)
 #fit model
 type=1
 Fac=c(1,1,1,1)
 mx <- asca.design.matrix(i,j,r,time)
 #effect_df.original <- effect(ASCA.2f,plot = F,sd=0.2,N=N,method = 'asca_original',effect = 'variables')
-effect_df.improved <- effect(ASCA.2f_leverage,plot = F,sd=0.2,N=N,method = 'asca_improved',effect = 'variables',R=1)
-variance_effect <- effect(ASCA.2f_leverage,sd=N,method = 'asca_improved',effect = 'variances',R=1)
+effect_df.improved <- effect(which_leverage = ASCA.2f_leverage,
+                             plot = F,
+                             sd=0.2,
+                             method = 'asca_improved',
+                             effect = 'variables',
+                             R=1,
+                             pat_names.list = pat_names,
+                             ftrs_in_pat.list = ftrs_in_pat,
+                             replicates = r,
+                             N=N,
+                             trend1,trend2,trend3,trend4)
+variance_effect <- effect(which_leverage = ASCA.2f_leverage,
+                          plot = F,
+                          sd=N1,
+                          method = 'asca_improved',
+                          effect = 'variances',
+                          R=1,
+                          pat_names.list = pat_names,
+                          ftrs_in_pat.list = ftrs_in_pat,
+                          replicates = r,
+                          N=NULL,
+                          trend1,trend2,trend3,trend4)
 ```
 ```{r}
 ggplot(effect_df.original,aes(x=effects,y=FN,colour=method))+
