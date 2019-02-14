@@ -116,9 +116,9 @@ plot.submodels_loading(asca.fit,groups)
 ```
 
 ```{r residual plot}
-residuals <- asca.fit$Model.bab$data-(asca.fit$Model.bab$scores%*%t(asca.fit$Model.bab$loadings))
-matplot(residuals[,leverages_spe[[2]]],type='l',col = 'red')
-matplot(residuals[,-leverages_spe[[2]]],type = 'l',col = 'grey',add=T)
+# residuals <- asca.fit$Model.bab$data-(asca.fit$Model.bab$scores%*%t(asca.fit$Model.bab$loadings))
+# matplot(residuals[,leverages_spe[[2]]],type='l',col = 'red')
+# matplot(residuals[,-leverages_spe[[2]]],type = 'l',col = 'grey',add=T)
 ```
 
 
