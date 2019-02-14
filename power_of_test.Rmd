@@ -81,7 +81,7 @@ effect <- function(which_leverage,
       #design matrix
       asca.fit <- which_leverage(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = F)
       asca.fitted.original <- fitted(df.final,asca.fit,groups,R = R,which_leverage)
-      plots[[each]] <- plot.leverage_spe(asca.fitted.original,sd=sd,title=paste('number of variables:',N[each]))
+      plots[[each]] <- plot.leverage_spe(asca.fitted.original,sd=sd,title=paste('number of variables:',N[each],method))
       if (plot == TRUE){
         plot(plots)
       }
@@ -102,7 +102,7 @@ effect <- function(which_leverage,
       #design matrix
       asca.fit <- which_leverage(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = F)
       asca.fitted.original <- fitted(df.final,asca.fit,groups,5,which_leverage)
-      plots[[each]] <- plot.leverage_spe(asca.fitted.original,sd=N[each],title=paste('variance:',N[each]))
+      plots[[each]] <- plot.leverage_spe(asca.fitted.original,sd=N[each],title=paste('variance:',N[each],method))
       if (plot == TRUE){
         plot(plots)
       }
@@ -124,11 +124,11 @@ effect <- function(which_leverage,
 }
 ```
 ```{r  effect of number of variables}
-i=2#treatment
-j=6#time
-r=4#replicate
-time=c(0,1,2,3,4,5)#time points
-sd=0.2
+i <- 2#treatment
+j <- 6#time
+r <- 4#replicate
+time <- c(0,1,2,3,4,5)#time points
+sd <- 0.2
 fluctuate <- list(2,-2,2,-2,2,-2)
 notrend <- rep(list(0),6)
 ctrl <- notrend
@@ -157,11 +157,11 @@ effect_df.improved <- effect(which_leverage = ASCA.2f_leverage,
                              pat_names.list = pat_names,
                              ftrs_in_pat.list = ftrs_in_pat,
                              replicates = r,
-                             N=N,
+                             N=N1,
                              trend1,trend2,trend3,trend4)
 variance_effect <- effect(which_leverage = ASCA.2f_leverage,
                           plot = F,
-                          sd=N1,
+                          sd=N,
                           method = 'asca_improved',
                           effect = 'variances',
                           R=1,

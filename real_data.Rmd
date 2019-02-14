@@ -28,10 +28,27 @@ df[20,] <- df[19,]
 df1 <- df %>% 
   group_by(togroup) %>% 
   mutate_all(~ifelse(is.na(.x), mean(.x, na.rm = TRUE), .x))
+
 df1[1:4,"Fructose-1,6-bisphosphate"] <- df1$`Fructose-1,6-bisphosphate`[5]#fill NA with mean of replicates. F16B is missing values at entire time 1 control. filled with values at time 1 treatment
+
+plot.mean_sd <- function(df){
+  mean_sd <- df %>% 
+    group_by(togroup) %>% 
+    summarise_all(.,funs(sd,mean)) %>% 
+    select(.,-togroup) %>% 
+    flatten()
+  
+  plot(mean_sd[1:560],mean_sd[561:1120],type = 'p')
+  
+}
+
+
+
+df.log <- log(df1)#log transform
+plot.mean_sd(df.log)
+plot.mean_sd(df1)
 df1$togroup <- NULL
 df1$Leucine <- NULL#leucine has lots of NA. so removed
-df.log <- log(df1)#log transform
 df.final.masigpro <- t(scale(df.log,center = F,scale = apply(df.log, 2, sd, na.rm = TRUE)))
 df.final <- t(scale(df.log))
 colnames <- rownames(df.final)
