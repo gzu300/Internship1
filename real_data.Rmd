@@ -80,7 +80,7 @@ calculate.ss <- function(tag,df.clean){
   # mean.sub
   
 }
-ss.treatment <- calculate.ss(rep(1:2,,each=20),df.clean)
+ss.treatment <- calculate.ss(rep(1:2,each=20),df.clean)
 ss.time <- calculate.ss(rep(rep(1:5,each=4),2),df.clean)
 ss.replicate <- df.clean %>% 
   mutate_all(.,funs((.-mean(.))^2))
