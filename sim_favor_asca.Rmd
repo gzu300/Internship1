@@ -13,9 +13,9 @@ knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE,results = F)
 ```{r,echo=T}
 ####pipeline#####
 i=2#treatment
-j=6#time
+j=5#time
 r=4#replicate
-time=c(0,1,2,3,4,5)#time points
+time=c(0,1,2,3,4)#time points
 ```
 White noise is N(0,0.2)
 ```{r trend}
@@ -35,11 +35,11 @@ set.seed(999)
 # y32 <- fluctuate
 
 rep <- 4
-sd <- 0.2
+sd <- 0.5
 ctrl <- 0.01*time+0.1
 tre1 <- -0.01*time-0.1
-fluctuate <- list(2,-2,2,-2,2,-2)
-notrend <- rep(list(0),6)
+fluctuate <- list(2,0,2,0,2)
+notrend <- rep(list(0),5)
 ctrl <- notrend
 tre1 <- fluctuate
 tre2 <- fluctuate
@@ -48,7 +48,7 @@ trend1 <- append(ctrl,tre1)
 trend2 <- append(ctrl,tre2)
 trend3 <- append(ctrl,tre2)
 trend4 <- append(ctrl,ctrl)
-ftrs_in_pat <- list(30,30,1,100)
+ftrs_in_pat <- list(15,15,1,55-31)
 pat_names <- list('one','two','three','flat')
 
 source('utils.R')
@@ -57,6 +57,41 @@ simulation <- create.simulation(pat_names.list = pat_names,ftrs_in_pat.list = ft
 df.final <- simulation$df
 groups <- simulation$groups
 ```
+
+```{r}
+calculate.ss <- function(tag,df.clean){
+  mean.grand <- df.clean %>% 
+    mutate_all(funs(mean))
+  df.clean$tag <- tag
+  mean.sub <- df.clean %>%
+    group_by(tag) %>%
+    mutate_all(funs(mean)) %>% 
+    ungroup() %>% 
+    select(.,-tag)
+  (mean.sub-mean.grand)^2
+  # mean.grand
+  # mean.sub
+  
+}
+df.clean <- data.frame(t(df.final))
+ss.treatment <- calculate.ss(rep(1:2,each=20),df.clean)
+ss.time <- calculate.ss(rep(rep(1:5,each=4),2),df.clean)
+df.clean$tag <- rep(1:10,each=4)
+ss.replicate <- df.clean %>% 
+  group_by(tag) %>% 
+  mutate_all(.,funs((.-mean(.))^2)) %>% 
+  ungroup() %>% 
+  select(.,-tag)
+total.sum <- sum(ss.treatment,ss.time,ss.replicate)
+percent_var.treatment <- sum(ss.treatment)/total.sum
+percent_var.time <- sum(ss.time)/total.sum
+percent_var.rep <- sum(ss.replicate)/total.sum
+
+df.var <- data.frame(sourc_of_variance=c('treatment','time','rep'),ss.percentage=c(percent_var.treatment*100,percent_var.time*100,percent_var.rep*100))
+print(df.var)
+```
+
+
 ```{r plot raw data metabolite one}
 trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[5,])
 ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
@@ -85,7 +120,7 @@ knitr::kable(cor(t(df.final[19:24,])),caption = 'correlations')
 mx <- asca.design.matrix(i,j,r,time)
 #fit model
 type=1
-Fac=c(1,1,2,1)
+Fac=c(1,1,1,1)
 asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = T)
 print(asca.fit$Model.bab$var.exp)
 ```

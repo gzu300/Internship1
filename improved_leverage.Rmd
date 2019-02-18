@@ -17,9 +17,9 @@ source('utils.R')
 set.seed(999)
 ####pipeline#####
 i=2#treatment
-j=6#time
+j=5#time
 r=4#replicate
-time=c(0,1,2,3,4,5)#time points
+time=c(0,1,2,3,4)#time points
 #y1 <- 0.01*time+0.01*time^2+0.01*time^3+0.01*time^4
 ctrl <- 0.4*time
 tre1 <- -0.4*time
@@ -48,7 +48,7 @@ y32 <- c(tre1)
 p1 <- 15
 p2 <- 15
 p3 <- 1
-neg <- 2000
+neg <- 55-31
 simulation <- generate_data.nocorrelation(p1,p2,p3,neg)
 df.final <- simulation$df
 groups <- simulation$groups
