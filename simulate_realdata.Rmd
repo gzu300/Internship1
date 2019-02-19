@@ -1,0 +1,166 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE,results = F)
+```
+```{r,echo=T}
+####pipeline#####
+i=2#treatment
+j=5#time
+r=4#replicate
+time=c(0,1,2,3,4)#time points
+```
+White noise is N(0,0.2)
+```{r trend}
+set.seed(999)
+
+
+rep <- 4
+sd <- 0.6
+
+tre1 <- list(3,4,5,5,6)
+tre2 <- list(3,4,5,4,3)
+notrend <- rep(list(5),5)
+tre3 <- list(2.5,3.5,4.5,4.7,5)
+
+
+trend1 <- append(notrend,map(tre1,~(.+2.1)*1))
+trend2 <- append(tre2,map(tre2,~(.+2.1)*1))
+trend3 <- append(tre3,map(tre3,~(.-2.1)*1))
+trend4 <- append(notrend,map(notrend,~.*1))
+ftrs_in_pat <- list(10,10,5,55-25)
+pat_names <- list('one','two','three','flat')
+
+source('utils.R')
+simulation <- create.simulation(pat_names.list = pat_names,ftrs_in_pat.list = ftrs_in_pat,replicates = rep,sd = sd,trend1,trend2,trend3,trend4)
+# simulation <- generate_data.same_var(p1 = 10,p2 = 10,p3 = 1,neg = 35,var=0.2)
+df.final <- simulation$df
+groups <- simulation$groups
+
+df.final <- data.frame(t(df.final))
+colnames <- colnames(df.final)
+
+df.final.masigpro <- t(df.final)#for masigpro
+df.final.asca <- t(scale(df.final))#for asca
+
+
+
+plot.mean_sd <- function(df,...){
+  df$togroup <- rep(1:10,each=4)
+  mean_sd <- df %>% 
+    group_by(togroup) %>% 
+    summarise_all(.,funs(mean,sd)) %>% 
+    select(.,-togroup) %>% 
+    flatten()
+  
+  plot(mean_sd[1:550],mean_sd[551:1100],type = 'p',xlab = 'mean',ylab = 'sd',...)
+  
+}
+
+plot.mean_sd(df.final)
+```
+
+```{r function plot metabolites}
+plot_metabolites <- function(df,range){
+  df.final <- df
+  df.toplot <- data.frame(t(df.final[range,]))
+  df.toplot$time <- rep(rep(time,each=r),i)
+  df.toplot$treatment <- rep(1:2,each=r*j)
+  a <- df.toplot %>% 
+    gather(key = metabolites,value = value,1:length(range))
+  
+  ggplot(a,aes(x=time,y=value,color=factor(treatment)))+
+    geom_point(size=0.5)+
+    stat_summary(fun.y = median,geom = 'line')+
+    theme(legend.title = element_text(size = 5))+
+    facet_wrap(metabolites~.)
+}
+plot_a_metabolite <- function(df,FUN,which){
+  df.final <- df
+  trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[which,])
+  ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
+    geom_point()+
+    stat_summary(fun.y = FUN,geom = 'line')
+}
+```
+
+```{r plot 1:27}
+plot_metabolites(df.final.masigpro,15:30)
+# plot_metabolites(df.final.masigpro,18:36)
+# plot_metabolites(df.final.masigpro,37:51)
+```
+
+```{r}
+calculate.ss <- function(tag,df.clean){
+  mean.grand <- df.clean %>% 
+    ungroup() %>% 
+    mutate_all(funs(mean))
+  df.clean$tag <- tag
+  mean.sub <- df.clean %>%
+    group_by(tag) %>%
+    mutate_all(funs(mean)) %>% 
+    ungroup() %>% 
+    select(.,-tag)
+  (mean.sub-mean.grand)^2
+  # mean.grand
+  # mean.sub
+  
+}
+
+df.clean <- df.final
+mean.grand <- df.clean %>% 
+  ungroup() %>% 
+  mutate_all(funs(mean))
+ss.treatment <- calculate.ss(rep(1:2,each=20),df.clean)
+ss.time <- calculate.ss(rep(rep(1:5,each=4),2),df.clean)
+df.clean$togroup <- rep(1:10,each=4)
+ss.replicate <- df.clean %>%
+  group_by(togroup) %>% 
+  mutate_all(.,funs((.-mean(.))^2))
+
+total.sum <- sum(ss.treatment,ss.time,ss.replicate)
+percent_var.treatment <- sum(ss.treatment)/total.sum
+percent_var.time <- sum(ss.time)/total.sum
+percent_var.rep <- sum(ss.replicate)/total.sum
+
+df.var.realdata <- data.frame(sourc_of_variance=c('treatment','time','rep'),ss.percentage=c(percent_var.treatment*100,percent_var.time*100,percent_var.rep*100))
+print(df.var.realdata)
+```
+
+```{r masigpro,results=T}
+source('utils.R')
+masigpro.design <- design_matrix(i,j,r,time)
+degree <- 2
+design <- make.design.matrix(edesign = masigpro.design,degree = degree)
+dis <- design$dis
+edesign <- design$edesign
+colnames(df.final.masigpro) <- rownames(edesign)
+
+masigpro.fit <- maSigPro(df.final.masigpro,masigpro.design,degree=degree)
+kable(masigpro.fit$summary)
+toplot <- rownames(masigpro.fit$sig.genes$treatment2vstreatment1$sig.profiles)
+```
+
+```{r asca}
+mx <- asca.design.matrix(i,j,r,time)
+
+Fac=c(1,1,2,2)
+type=1
+source('ASCA-genes.1.2.1/sourceASCA.R')
+asca.fit <- ASCA.2f_leverage(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
+
+asca.fitted <- fitted(df.final.asca,asca.fit,colnames,50,ASCA.2f_leverage)
+asca.selected <- plot.leverage_spe(asca.fitted,2)
+print(sort(colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]))
+print(sort(masigpro.fit$summary[,2]))
+
+```
+
+```{r}
+plot(asca.selected)
+```
+
+

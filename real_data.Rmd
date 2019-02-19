@@ -14,22 +14,24 @@ knitr::opts_chunk$set(echo = F,message = F,warning = F,results = F)
 ```{r data transformation}
 library(tidyverse)
 library(readxl)
+library(knitr)
 colnames <- colnames(read_xlsx('macrophage%20polarization.xlsx',range = 'PeakArea!I1:BL1'))
 df <- read_xlsx('macrophage%20polarization.xlsx',range = 'PeakArea!I4:BL43',col_names = colnames)
 #df.raw <- read_xlsx('macrophage%20polarization.xlsx',range = 'PeakArea!I4:BL43',col_names = colnames)
-#rm(colnames)
+rm(colnames)
 
 i=2
 j=5
 r=4
 time=c(0,2,6,10,24)
+
 df$togroup <- rep(1:10,each=4)
 df[20,] <- df[19,]
 df.clean <- df %>% 
   group_by(togroup) %>% 
   mutate_all(~ifelse(is.na(.x), mean(.x, na.rm = TRUE), .x))#fill NA with mean of replicates. 
 
-df.clean[1:4,"Fructose-1,6-bisphosphate"] <- df.clean$`Fructose-1,6-bisphosphate`[5]#F16B is missing values at entire time 1 control. filled with values at time 1 treatment
+df.clean[1:4,"Fructose-1,6-bisphosphate"] <- df.clean$`Fructose-1,6-bisphosphate`[5]#F16B is missing values at entire time 1 control. filled with values at time 1 treatment. the assumption is that value at time 0 for both control and treatment is the same
 
 plot.mean_sd <- function(df,...){
   mean_sd <- df %>% 
@@ -43,21 +45,25 @@ plot.mean_sd <- function(df,...){
 }
 df.log <- log(df.clean)#log transform
 
-plot.mean_sd(df.log, main = 'log transformed', sub = 'log transformed shows homo')
-plot.mean_sd(df.clean, main = 'original data', sub = 'heteroscocity')
-df.clean$togroup <- NULL
-df.clean$Leucine <- NULL#leucine has lots of NA. so removed
+plot.mean_sd(df.log, main = 'log transformed', sub = 'log transformed shows homoscedastic')
+plot.mean_sd(df.clean, main = 'original data', sub = 'heteroscedastic')#check the homoscedasticity
 
-df.final.masigpro <- t(df.clean)
-df.final <- t(scale(df.log))
-#colnames <- rownames(df.final)
-```
-
-```{r}
-mean_sd.df <- df %>% 
+mean_sd.df <- df.log %>% 
     group_by(togroup) %>% 
     summarise_all(.,funs(mean,sd))
+
+df.clean$togroup <- NULL
+df.clean$Leucine <- NULL#leucine has lots of NA. so removed
+df.log$Leucine <- NULL
+df.log$togroup <- NULL
+
+df.final.masigpro <- t(df.log)#for masigpro
+df.final <- t(scale(df.log))#for asca
+colnames <- rownames(df.final)
+
 ```
+
+
 
 
 1. original mean vs sd shows linear dependency. log transform corrected it therefore it is needed.
@@ -80,18 +86,23 @@ calculate.ss <- function(tag,df.clean){
   # mean.sub
   
 }
+df.clean <- df.log
+mean.grand <- df.clean %>% 
+  ungroup() %>% 
+  mutate_all(funs(mean))
 ss.treatment <- calculate.ss(rep(1:2,each=20),df.clean)
 ss.time <- calculate.ss(rep(rep(1:5,each=4),2),df.clean)
 ss.replicate <- df.clean %>% 
   mutate_all(.,funs((.-mean(.))^2))
+total.sum1 <- calculate.ss(1:40,df.clean)
 total.sum <- sum(ss.treatment,ss.time,ss.replicate)
+total.sum1 <- sum(total.sum1)
 percent_var.treatment <- sum(ss.treatment)/total.sum
 percent_var.time <- sum(ss.time)/total.sum
 percent_var.rep <- sum(ss.replicate)/total.sum
 
 df.var.realdata <- data.frame(sourc_of_variance=c('treatment','time','rep'),ss.percentage=c(percent_var.treatment*100,percent_var.time*100,percent_var.rep*100))
-print(df.var.realdata)
-
+knitr::kable(df.var.realdata)
 ```
 
 
@@ -120,13 +131,14 @@ plot_a_metabolite <- function(df,FUN,which){
 ```
 
 ```{r plot 1:27}
-plot_metabolites(df.final,1:6)
-plot_metabolites(df.final,1:6)
+plot_metabolites(df.final.masigpro,1:17)
+plot_metabolites(df.final.masigpro,18:36)
+plot_metabolites(df.final.masigpro,37:51)
 ```
 
 ```{r}
-plot_a_metabolite(df.final,mean,"ADP")
-plot_a_metabolite(df.final,median,"Adenosine")
+plot_a_metabolite(df.final.masigpro,mean,"ADP")
+plot_a_metabolite(df.final.masigpro,median,"Adenosine")
 ```
 
 ```{r,results=T}
@@ -139,21 +151,21 @@ edesign <- design$edesign
 colnames(df.final.masigpro) <- rownames(edesign)
 
 masigpro.fit <- maSigPro(df.final.masigpro,masigpro.design,degree=degree)
-print(masigpro.fit$summary)
+kable(masigpro.fit$summary)
 toplot <- rownames(masigpro.fit$sig.genes$treatment2vstreatment1$sig.profiles)
 ```
 ```{r,include=F}
-AA <- df.final["ADP",]
+AA <- df.final.masigpro["ADP",]
 PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector)
 ```
 
 ```{r,include=F}
-AA <- df.final["AMP",]
+AA <- df.final.masigpro["AMP",]
 PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector)
 ```
 
 ```{r,include=F}
-AA <- df.final.masigpro["Arginine",]
+AA <- df.final.masigpro["Serine",]
 PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector)
 ```
 
@@ -178,7 +190,7 @@ asca.fitted <- fitted(df.final,asca.fit,colnames,2,ASCA.2f_leverage)
 asca.selected <- plot.leverage_spe(asca.fitted,2)
 print(sort(colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]))
 print(sort(masigpro.fit$summary[,2]))
-
+plot(asca.selected)
 ```
 
 in asca-gene but not masigpro
