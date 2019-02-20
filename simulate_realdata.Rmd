@@ -152,7 +152,7 @@ type=1
 source('ASCA-genes.1.2.1/sourceASCA.R')
 asca.fit <- ASCA.2f_leverage(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
 
-asca.fitted <- fitted(df.final.asca,asca.fit,colnames,50,ASCA.2f_leverage)
+asca.fitted <- fitted(df.final.asca,asca.fit,groups,50,ASCA.2f_leverage)
 asca.selected <- plot.leverage_spe(asca.fitted,sd)
 print(sort(colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]))
 print(sort(masigpro.fit$summary[,2]))
@@ -165,8 +165,8 @@ plot(asca.selected)
 
 ```{r asca original}
 asca.fit.original <- ASCA.2f(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
-asca.original.fitted <- fitted(df.final.asca,asca.fit.original,colnames,50,ASCA.2f)
-asca.original.selected <- plot.leverage_spe(asca.original.fitted,sd,title = 'original leverage')
+asca.original.fitted <- fitted(df.final.asca,asca.fit.original,groups,50,ASCA.2f)
+asca.original.selected <- plot.leverage_spe(asca.original.fitted,sd,title = 'original leverage and SPE with 2 PCs')
 plot(asca.original.selected)
 ```
 
