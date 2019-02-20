@@ -15,7 +15,8 @@ time=c(0,1,2,3,4)#time points
 ```
 White noise is N(0,0.2)
 ```{r trend}
-set.seed(999)
+source('utils.R')
+# set.seed(999)
 
 
 rep <- 4
@@ -31,10 +32,10 @@ trend1 <- append(notrend,map(tre1,~(.+2.1)*1))
 trend2 <- append(tre2,map(tre2,~(.+2.1)*1))
 trend3 <- append(tre3,map(tre3,~(.-2.1)*1))
 trend4 <- append(notrend,map(notrend,~.*1))
+#trend4 <- append(tre3,tre3)
 ftrs_in_pat <- list(10,10,5,55-25)
 pat_names <- list('one','two','three','flat')
 
-source('utils.R')
 simulation <- create.simulation(pat_names.list = pat_names,ftrs_in_pat.list = ftrs_in_pat,replicates = rep,sd = sd,trend1,trend2,trend3,trend4)
 # simulation <- generate_data.same_var(p1 = 10,p2 = 10,p3 = 1,neg = 35,var=0.2)
 df.final <- simulation$df
@@ -88,7 +89,7 @@ plot_a_metabolite <- function(df,FUN,which){
 ```
 
 ```{r plot 1:27}
-plot_metabolites(df.final.masigpro,15:30)
+plot_metabolites(df.final.masigpro,4:8)
 # plot_metabolites(df.final.masigpro,18:36)
 # plot_metabolites(df.final.masigpro,37:51)
 ```
@@ -131,7 +132,6 @@ print(df.var.realdata)
 ```
 
 ```{r masigpro,results=T}
-source('utils.R')
 masigpro.design <- design_matrix(i,j,r,time)
 degree <- 2
 design <- make.design.matrix(edesign = masigpro.design,degree = degree)
@@ -139,8 +139,8 @@ dis <- design$dis
 edesign <- design$edesign
 colnames(df.final.masigpro) <- rownames(edesign)
 
-masigpro.fit <- maSigPro(df.final.masigpro,masigpro.design,degree=degree)
-kable(masigpro.fit$summary)
+masigpro.fit <- maSigPro(df.final.masigpro,masigpro.design,degree=degree,rsq = 0.7)
+knitr::kable(masigpro.fit$summary)
 toplot <- rownames(masigpro.fit$sig.genes$treatment2vstreatment1$sig.profiles)
 ```
 
@@ -153,7 +153,7 @@ source('ASCA-genes.1.2.1/sourceASCA.R')
 asca.fit <- ASCA.2f_leverage(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
 
 asca.fitted <- fitted(df.final.asca,asca.fit,colnames,50,ASCA.2f_leverage)
-asca.selected <- plot.leverage_spe(asca.fitted,2)
+asca.selected <- plot.leverage_spe(asca.fitted,sd)
 print(sort(colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]))
 print(sort(masigpro.fit$summary[,2]))
 
@@ -162,5 +162,13 @@ print(sort(masigpro.fit$summary[,2]))
 ```{r}
 plot(asca.selected)
 ```
+
+```{r asca original}
+asca.fit.original <- ASCA.2f(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
+asca.original.fitted <- fitted(df.final.asca,asca.fit.original,colnames,50,ASCA.2f)
+asca.original.selected <- plot.leverage_spe(asca.original.fitted,sd,title = 'original leverage')
+plot(asca.original.selected)
+```
+
 
 
