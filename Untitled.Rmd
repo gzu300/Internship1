@@ -1,10 +1,8 @@
 ---
-title: "sim_favor_asca"
+title: "Untitled"
 author: "zhu"
-date: "11/12/2018"
-output:
-  pdf_document: default
-  word_document: default
+date: "21/02/2019"
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -38,14 +36,14 @@ rep <- 4
 sd <- 0.2
 ctrl <- 0.01*time+0.1
 tre1 <- -0.01*time-0.1
-fluctuate <- list(1,0,1,0,1)
+fluctuate <- list(2,0,2,0,2)
 notrend <- rep(list(0),5)
 ctrl <- notrend
 tre1 <- fluctuate
-tre2 <- fluctuate
+tre2 <- -0.1*time-0.1
 
-trend1 <- append(ctrl,tre2)
-trend2 <- append(ctrl,tre2)
+trend1 <- append(ctrl,tre1)
+trend2 <- append(ctrl,tre1)
 trend3 <- append(ctrl,tre2)
 trend4 <- append(ctrl,ctrl)
 ftrs_in_pat <- list(15,15,1,55-31)
@@ -181,4 +179,3 @@ ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
 ```{r}
 plots <- plot.submodels(asca.fitted,asca.fit,Fac)
 ```
-

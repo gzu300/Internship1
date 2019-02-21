@@ -101,7 +101,7 @@ percent_var.treatment <- sum(ss.treatment)/total.sum
 percent_var.time <- sum(ss.time)/total.sum
 percent_var.rep <- sum(ss.replicate)/total.sum
 
-df.var.realdata <- data.frame(sourc_of_variance=c('treatment','time','rep'),ss.percentage=c(percent_var.treatment*100,percent_var.time*100,percent_var.rep*100))
+df.var.realdata <- data.frame(sourc=c('treatment','time','rep'),ss.percentage=c(percent_var.treatment*100,percent_var.time*100,percent_var.rep*100))
 knitr::kable(df.var.realdata)
 ```
 

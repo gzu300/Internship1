@@ -105,10 +105,9 @@ Screeplot shows that 1 PC to be included for submodel b.ab(treatment+interaction
 
 ```{r leverage and spe plot}
 fitted <- fitted(df.final,asca.fit,groups,2,ASCA.2f_leverage)
-plot.leverage_spe(fitted,0.2)
+plot.leverage_spe(fitted,0.2,size = 10)
 ```
 
-ß
 
 
 

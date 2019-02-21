@@ -16,7 +16,7 @@ time=c(0,1,2,3,4)#time points
 White noise is N(0,0.2)
 ```{r trend}
 source('utils.R')
-# set.seed(999)
+set.seed(999)
 
 
 rep <- 4
@@ -32,6 +32,11 @@ trend1 <- append(notrend,map(tre1,~(.+2.1)*1))
 trend2 <- append(tre2,map(tre2,~(.+2.1)*1))
 trend3 <- append(tre3,map(tre3,~(.-2.1)*1))
 trend4 <- append(notrend,map(notrend,~.*1))
+
+# trend1 <- append(notrend,notrend)
+# trend2 <- append(notrend,notrend)
+# trend3 <- append(notrend,notrend)
+# trend4 <- append(notrend,notrend)
 #trend4 <- append(tre3,tre3)
 ftrs_in_pat <- list(10,10,5,55-25)
 pat_names <- list('one','two','three','flat')
@@ -89,7 +94,7 @@ plot_a_metabolite <- function(df,FUN,which){
 ```
 
 ```{r plot 1:27}
-plot_metabolites(df.final.masigpro,4:8)
+plot_metabolites(df.final.masigpro,54:55)
 # plot_metabolites(df.final.masigpro,18:36)
 # plot_metabolites(df.final.masigpro,37:51)
 ```
@@ -127,7 +132,7 @@ percent_var.treatment <- sum(ss.treatment)/total.sum
 percent_var.time <- sum(ss.time)/total.sum
 percent_var.rep <- sum(ss.replicate)/total.sum
 
-df.var.realdata <- data.frame(sourc_of_variance=c('treatment','time','rep'),ss.percentage=c(percent_var.treatment*100,percent_var.time*100,percent_var.rep*100))
+df.var.realdata <- data.frame(source=c('treatment','time','rep'),ss.percentage=c(percent_var.treatment*100,percent_var.time*100,percent_var.rep*100))
 print(df.var.realdata)
 ```
 
@@ -153,7 +158,7 @@ source('ASCA-genes.1.2.1/sourceASCA.R')
 asca.fit <- ASCA.2f_leverage(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
 
 asca.fitted <- fitted(df.final.asca,asca.fit,groups,50,ASCA.2f_leverage)
-asca.selected <- plot.leverage_spe(asca.fitted,sd)
+asca.selected <- plot.leverage_spe(asca.fitted,sd,size=6,tag = 'A')
 print(sort(colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]))
 print(sort(masigpro.fit$summary[,2]))
 
@@ -166,9 +171,30 @@ plot(asca.selected)
 ```{r asca original}
 asca.fit.original <- ASCA.2f(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
 asca.original.fitted <- fitted(df.final.asca,asca.fit.original,groups,50,ASCA.2f)
-asca.original.selected <- plot.leverage_spe(asca.original.fitted,sd,title = 'original leverage and SPE with 2 PCs')
+asca.original.selected <- plot.leverage_spe(asca.original.fitted,sd,title = 'original leverage and SPE with 2 PCs',size=6,tag = 'B')
 plot(asca.original.selected)
 ```
 
+```{r}
+improved_loadings <- plot.submodels(asca.fitted,asca.fit,Fac,size = 6, tag = 'D')
+improved_loading.pc1 <- improved_loadings$loadings$PC1
+```
 
+```{r}
+# barplot(a$permut_model$Model.bab$loadings[,1])
+# barplot(b$permut_model$Model.bab$loadings[,1])
+```
+
+
+
+```{r}
+original_loading <- plot.submodels(asca.fitted = asca.original.fitted,asca.fit.original,Fac,size = 6, tag = 'C')
+original_loading.pc1 <- original_loading$loadings$PC1
+original_loading$loadings$PC2
+plot(original_loading$leverage_spe)
+```
+```{r}
+setwd('../../Google Drive/BDA_internship/thesis/Mythesis/data/')
+save(list = c('df.var.realdata','asca.selected','asca.original.selected','improved_loading.pc1','original_loading.pc1'),file = 'data.RData')
+```
 

@@ -15,7 +15,7 @@ leverage.lims <- function(data = data, R = 100, FUN, Designa = Designa, Designb 
 			lim[[j]] <- cbind(lim[[j]],A[[j]]$leverage)
 		}
 	}
-		rm(A)
+		#rm(A)
 		gc()
 ## Find alpha quantile value for reference distribution
 	QC <- apply(sapply(lim,function(x) {apply(x,1,quantile,probs=1 - alpha, na.rm=T)}),2,quantile,probs=1 - alpha, na.rm=T)
@@ -24,7 +24,7 @@ leverage.lims <- function(data = data, R = 100, FUN, Designa = Designa, Designb 
 	for (h in 1:length(lim)) {
 		Selection[[h]] <- rownames(data)[Model[[h]]$leverage > QC[[h]]]
 	}
-	output <- list(lim, QC, Selection)
-	names(output) <- c("NullDistribution", "Cutoff", "Selection")
+	output <- list(lim, QC, Selection,A)
+	names(output) <- c("NullDistribution", "Cutoff", "Selection","permut_model")
 	output
 }

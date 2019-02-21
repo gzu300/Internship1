@@ -221,13 +221,13 @@ stats <- function(fitted.data){
 #####plots########
 
 #plot.leverage_spe(df.final,asca.fit, groups)
-plot.leverage_spe <- function(asca.fitted, sd=sd,title = paste('improved leverage and SPE with',Fac[3],'PCs')){
+plot.leverage_spe <- function(asca.fitted, sd=sd,title = paste('improved leverage and SPE with',Fac[3],'PCs'),size,...){
   plot <- ggplot(data = asca.fitted$stats_for_plot,aes(x=leverage,y=spe,color=groups))+
     geom_point()+
     geom_hline(yintercept = asca.fitted$spe_lim)+
     geom_vline(xintercept = asca.fitted$lev_limit)+
-    labs(title = title)+
-    theme(legend.text = element_text(size=5),legend.key.size = unit(0.1,'cm'))
+    labs(title = title,...)+
+    theme(axis.title = element_text(size=size),legend.title = element_text(size=size),legend.text = element_text(size=3),legend.key.size = unit(0.08,'cm'), plot.title = element_text(size=size))
   plot
 }
 
@@ -252,7 +252,7 @@ plot.submodels_score <- function(asca.fit,i,j,title = paste('score plot for subm
 }
 
 #loading plot
-plot.submodels_loading <- function(asca.fit,groups=NULL,title = paste('loading plot for submodel b.ab')){
+plot.submodels_loading <- function(asca.fit,groups=NULL,title = paste('loading plot for submodel b.ab'),size,...){
   #plot loadings for all the PCs
   #groups is a vector of strings or numbers specifies patterns of variables. 
   #it needs to be the same length as variables. same pattern gives the same tag.
@@ -263,20 +263,20 @@ plot.submodels_loading <- function(asca.fit,groups=NULL,title = paste('loading p
   output <- as.vector(PCs,mode = 'list') %>% 
     set_names(paste('PC',PCs,sep = ''))
   for (each in PCs){
-    plot <- ggplot(bab.loadings,aes(x=metabolites,y=bab.loadings[[each]],fill=groups))+
-      geom_bar(stat = 'identity',position = 'dodge')+
+    plot <- ggplot(bab.loadings,aes(x=metabolites,fill=groups))+
+      geom_col(aes_string(y = colnames(bab.loadings)[each]))+
       ylab(paste('PC',each))+
-      labs(title = title)+
-      theme(legend.text = element_text(size=5),legend.key.size = unit(0.1,'cm'))
+      labs(title = title,...)+
+      theme(axis.title = element_text(size=size),legend.title = element_text(size=size),legend.text = element_text(size=3),legend.key.size = unit(0.08,'cm'), plot.title = element_text(size=size))
     output[[each]] <- plot
   }
   output
 }
 
-plot.submodels <- function(asca.fitted,asca.fit, Fac=Fac){
-  output <- list(leverage_spe=plot.leverage_spe(asca.fitted = asca.fitted),
+plot.submodels <- function(asca.fitted,asca.fit, Fac=Fac, size=10,...){
+  output <- list(leverage_spe=plot.leverage_spe(asca.fitted = asca.fitted,size = size,...),
                  scores=plot.submodels_score(asca.fit,i,j),
-                 loadings=plot.submodels_loading(asca.fit,groups=groups))
+                 loadings=plot.submodels_loading(asca.fit,groups=groups,size = size,...))
   output
 }
 
