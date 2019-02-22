@@ -94,9 +94,9 @@ plot_a_metabolite <- function(df,FUN,which){
 ```
 
 ```{r plot 1:27}
-plot_metabolites(df.final.masigpro,54:55)
+plot_metabolites(df.final.masigpro,1:17)
 # plot_metabolites(df.final.masigpro,18:36)
-# plot_metabolites(df.final.masigpro,37:51)
+plot_metabolites(df.final.masigpro,37:51)
 ```
 
 ```{r}
@@ -144,7 +144,7 @@ dis <- design$dis
 edesign <- design$edesign
 colnames(df.final.masigpro) <- rownames(edesign)
 
-masigpro.fit <- maSigPro(df.final.masigpro,masigpro.design,degree=degree,rsq = 0.7)
+masigpro.fit <- maSigPro(df.final.masigpro,masigpro.design,degree=degree,rsq = 0.4)
 knitr::kable(masigpro.fit$summary)
 toplot <- rownames(masigpro.fit$sig.genes$treatment2vstreatment1$sig.profiles)
 ```
@@ -194,7 +194,8 @@ original_loading$loadings$PC2
 plot(original_loading$leverage_spe)
 ```
 ```{r}
-setwd('../../Google Drive/BDA_internship/thesis/Mythesis/data/')
-save(list = c('df.var.realdata','asca.selected','asca.original.selected','improved_loading.pc1','original_loading.pc1'),file = 'data.RData')
+#setwd('../../Google Drive/BDA_internship/thesis/Mythesis/data/')
+# setwd('D:/google drive/BDA_internship/thesis/Mythesis/data/')
+# save(list = c('df.var.realdata','asca.selected','asca.original.selected','improved_loading.pc1','original_loading.pc1', 'venn_list','ascaonly','masigproonly'),file = 'data.RData')
 ```
 

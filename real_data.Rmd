@@ -107,7 +107,7 @@ knitr::kable(df.var.realdata)
 
 
 ```{r function plot metabolites}
-plot_metabolites <- function(df,range){
+plot_metabolites <- function(df,range,...){
   df.final <- df
   df.toplot <- data.frame(t(df.final[range,]))
   df.toplot$time <- rep(rep(time,each=r),i)
@@ -115,30 +115,35 @@ plot_metabolites <- function(df,range){
   a <- df.toplot %>% 
     gather(key = metabolites,value = value,1:length(range))
   
-  ggplot(a,aes(x=time,y=value,color=factor(treatment)))+
+  output <- ggplot(a,aes(x=time,y=value,color=factor(treatment)))+
     geom_point(size=0.5)+
-    stat_summary(fun.y = median,geom = 'line')+
+    stat_summary(fun.y = mean,geom = 'line')+
     theme(legend.title = element_text(size = 5))+
-    facet_wrap(metabolites~.)
+    facet_wrap(metabolites~., scales = 'free')+
+    geom_smooth(method = 'lm', formula = y~poly(x,2),se = F,linetype = '3313')+
+    labs(...)
+  output
 }
 plot_a_metabolite <- function(df,FUN,which){
   df.final <- df
   trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[which,])
   ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
     geom_point()+
-    stat_summary(fun.y = FUN,geom = 'line')
+    stat_summary(fun.y = FUN,geom = 'line')+
+    geom_smooth(method = 'lm', formula = y~poly(x,2),se = F,linetype = '3313')
 }
 ```
 
 ```{r plot 1:27}
-plot_metabolites(df.final.masigpro,1:17)
-plot_metabolites(df.final.masigpro,18:36)
-plot_metabolites(df.final.masigpro,37:51)
+ascaonly <- plot_metabolites(df.final.masigpro,c('CMP','AMP','ATP'),tag = 'A')
+masigproonly <- plot_metabolites(df.final.masigpro,c("Glycerol-phosphate","Isocitric acid","Lactic Acid"),tag = 'B')
+# plot_metabolites(df.final.masigpro,37:51)
+plot(ascaonly)
 ```
 
 ```{r}
 plot_a_metabolite(df.final.masigpro,mean,"ADP")
-plot_a_metabolite(df.final.masigpro,median,"Adenosine")
+plot_a_metabolite(df.final.masigpro,median,"Fructose-1,6-bisphosphate")
 ```
 
 ```{r,results=T}
@@ -150,13 +155,13 @@ dis <- design$dis
 edesign <- design$edesign
 colnames(df.final.masigpro) <- rownames(edesign)
 
-masigpro.fit <- maSigPro(df.final.masigpro,masigpro.design,degree=degree)
+masigpro.fit <- maSigPro(df.final.masigpro,masigpro.design,degree=degree, rsq = 0.4)
 kable(masigpro.fit$summary)
 toplot <- rownames(masigpro.fit$sig.genes$treatment2vstreatment1$sig.profiles)
 ```
 ```{r,include=F}
-AA <- df.final.masigpro["ADP",]
-PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector)
+AA <- df.final.masigpro["CMP",]
+PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'CMP')
 ```
 
 ```{r,include=F}
@@ -165,8 +170,13 @@ PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design
 ```
 
 ```{r,include=F}
-AA <- df.final.masigpro["Serine",]
-PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector)
+AA <- df.final.masigpro["ATP",]
+PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'ATP')
+```
+
+```{r,include=F}
+AA <- df.final.masigpro["GSSG",]
+PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'GSSG')
 ```
 
 ```{r}
@@ -186,28 +196,30 @@ rmsecv
 
 
 ```{r,results=T}
-asca.fitted <- fitted(df.final,asca.fit,colnames,2,ASCA.2f_leverage)
-asca.selected <- plot.leverage_spe(asca.fitted,2)
+asca.fitted <- fitted(df.final,asca.fit,groups = NULL,100,ASCA.2f_leverage)
+asca.selected <- plot.leverage_spe(asca.fitted,2,size=10)
+plot(asca.selected)
 print(sort(colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]))
 print(sort(masigpro.fit$summary[,2]))
-plot(asca.selected)
+venn_list <- list(maSigpro = sort(masigpro.fit$summary[,2]), ASCA.gene = sort(colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]))
+venn::venn(venn_list)
 ```
 
 in asca-gene but not masigpro
 
 ```{r,include=F}
-AA <- df.final.masigpro["ADP",]
-PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'ADP')
+AA <- df.final.masigpro["Glycerol-phosphate",]
+PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'Glycerol-phosphate')
 ```
 
 ```{r,include=F}
-AA <- df.final.masigpro["AMP",]
-PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'AMP')
+AA <- df.final.masigpro["Isocitric acid",]
+PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'Isocitric acid')
 ```
 
 ```{r,include=F}
-AA <- df.final.masigpro["Arginine",]
-PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'Arginine')
+AA <- df.final.masigpro["Lactic Acid",]
+PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'Lactic Acid')
 ```
 
 ```{r,include=F}
@@ -218,7 +230,7 @@ PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design
 in both
 
 ```{r,include=F}
-AA <- df.final.masigpro["Tryptophan",]
+AA <- df.final.masigpro["Phosphoglyceric acid",]
 PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'Tryptophan')
 ```
 

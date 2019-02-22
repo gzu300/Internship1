@@ -280,3 +280,28 @@ plot.submodels <- function(asca.fitted,asca.fit, Fac=Fac, size=10,...){
   output
 }
 
+plot_metabolites <- function(df,range,...){
+  df.final <- df
+  df.toplot <- data.frame(t(df.final[range,]))
+  df.toplot$time <- rep(rep(time,each=r),i)
+  df.toplot$treatment <- rep(1:2,each=r*j)
+  a <- df.toplot %>% 
+    gather(key = metabolites,value = value,1:length(range))
+  
+  output <- ggplot(a,aes(x=time,y=value,color=factor(treatment)))+
+    geom_point(size=0.5)+
+    stat_summary(fun.y = mean,geom = 'line')+
+    theme(legend.title = element_text(size = 5))+
+    facet_wrap(metabolites~., scales = 'free')+
+    geom_smooth(method = 'lm', formula = y~poly(x,2),se = F,linetype = '3313')+
+    labs(...)
+  output
+}
+plot_a_metabolite <- function(df,FUN,which){
+  df.final <- df
+  trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[which,])
+  ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
+    geom_point()+
+    stat_summary(fun.y = FUN,geom = 'line')+
+    geom_smooth(method = 'lm', formula = y~poly(x,2),se = F,linetype = '3313')
+}
