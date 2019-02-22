@@ -98,6 +98,7 @@ ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
   geom_point()+
   stat_summary(fun.y = mean,geom = 'line')+
   labs(title = 'pattern')
+sim.asca.pattern <- plot_a_metabolite(df.final,mean,'one',tag='A')
 ```
 ```{r plot raw data metabolite two}
 trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[31,])
@@ -135,7 +136,8 @@ plot(rep(1:6,2),ab[,1])
 ```{r leverage and spe plot}
 asca.fitted <- fitted(df.final,asca.fit,groups,2,which_leverage = ASCA.2f_leverage)
 asca.fitted.original <- fitted(df.final,asca.fit,groups,2,which_leverage = ASCA.2f)
-leverages_spe <- plot.leverage_spe(asca.fitted,0.2,size = 10)
+leverages_spe <- plot.leverage_spe(asca.fitted,0.2,size = 10,tag='B')
+lev.spe.sim.asca <- leverages_spe
 plot(leverages_spe)
 ```
 

@@ -196,7 +196,7 @@ rmsecv
 
 
 ```{r,results=T}
-asca.fitted <- fitted(df.final,asca.fit,groups = NULL,100,ASCA.2f_leverage)
+asca.fitted <- fitted(df.final,asca.fit,groups = colnames,100,ASCA.2f_leverage)
 asca.selected <- plot.leverage_spe(asca.fitted,2,size=10)
 plot(asca.selected)
 print(sort(colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]))

@@ -19,18 +19,18 @@ source('utils.R')
 
 
 rep <- 4
-sd <- 0.4
+sd <- 0.6
 
 tre1 <- list(3,4,5,5,6)
 tre2 <- list(3,4,5,4,3)
-notrend <- rep(list(0),5)
+notrend <- rep(list(5),5)
 tre3 <- list(2.5,3.5,4.5,4.7,5)
 
 
-trend1 <- append(tre1,map(tre1,~(.+0.8)*1))
-trend2 <- append(tre1,map(tre1,~(.+0.8)*1))
-trend3 <- append(tre1,map(tre1,~(.-0.8)*1))
-trend4 <- append(notrend,map(notrend,~.*1))
+trend1 <- append(notrend,map(notrend,~(.+0.8)*1))
+trend2 <- append(notrend,map(tre2,~(.+4.1)*1))
+trend3 <- append(tre3,map(tre3,~(.-0.8)*1))
+trend4 <- append(tre1,map(tre1,~.*1))
 
 # trend1 <- append(notrend,notrend)
 # trend2 <- append(notrend,notrend)
@@ -53,19 +53,19 @@ df.final.asca <- t(scale(df.final))#for asca
 
 
 
-# plot.mean_sd <- function(df,...){
-#   df$togroup <- rep(1:10,each=4)
-#   mean_sd <- df %>% 
-#     group_by(togroup) %>% 
-#     summarise_all(.,funs(mean,sd)) %>% 
-#     select(.,-togroup) %>% 
-#     flatten()
-#   
-#   plot(mean_sd[1:550],mean_sd[551:1100],type = 'p',xlab = 'mean',ylab = 'sd',...)
-#   
-# }
-# 
-# plot.mean_sd(df.final)
+plot.mean_sd <- function(df,...){
+  df$togroup <- rep(1:10,each=4)
+  mean_sd <- df %>% 
+    group_by(togroup) %>% 
+    summarise_all(.,funs(mean,sd)) %>% 
+    select(.,-togroup) %>% 
+    flatten()
+  
+  plot(mean_sd[1:550],mean_sd[551:1100],type = 'p',xlab = 'mean',ylab = 'sd',...)
+  
+}
+
+plot.mean_sd(df.final)
 ```
 
 ```{r function plot metabolites}
@@ -96,10 +96,10 @@ plot_a_metabolite <- function(df,FUN,which,...){
 ```{r plot 1:27}
 plot_metabolites(df.final.masigpro,1:17)
 # plot_metabolites(df.final.masigpro,18:36)
-plot_metabolites(df.final.masigpro,37:51)
-sim.masigpro.pattern <- plot_a_metabolite(df.final.masigpro,mean,colnames[1],tag='A')
-# sim.real.pattern3 <- plot_a_metabolite(df.final.masigpro,mean,colnames[21],tag='B')
-# sim.real.pattern3
+plot_metabolites(df.final.masigpro,21:40)
+sim.real.pattern <- plot_a_metabolite(df.final.masigpro,mean,colnames[1],tag='A')
+sim.real.pattern3 <- plot_a_metabolite(df.final.masigpro,mean,colnames[21],tag='B')
+sim.real.pattern3
 ```
 
 ```{r}
@@ -155,38 +155,33 @@ toplot <- rownames(masigpro.fit$sig.genes$treatment2vstreatment1$sig.profiles)
 ```{r asca}
 mx <- asca.design.matrix(i,j,r,time)
 
-Fac=c(1,1,1,2)
+Fac=c(1,1,2,2)
 type=1
 source('ASCA-genes.1.2.1/sourceASCA.R')
-asca.fit <- ASCA.2f_leverage(X = t(df.final.masigpro),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
+asca.fit <- ASCA.2f_leverage(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
 
-asca.fitted <- fitted(df.final.asca,asca.fit,groups,1,ASCA.2f_leverage)
-lev.spe.sim.masigpro <- plot.leverage_spe(asca.fitted,sd,size=6,tag = 'B')
+asca.fitted <- fitted(df.final.asca,asca.fit,groups,50,ASCA.2f_leverage)
+asca.selected <- plot.leverage_spe(asca.fitted,sd,size=6,tag = 'C')
 print(sort(colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]))
 print(sort(masigpro.fit$summary[,2]))
+
 ```
 
 ```{r}
 plot(asca.selected)
-#lev.spe.sim.real <- asca.selected
+lev.spe.sim.real <- asca.selected
 ```
-
-```{r}
-asca.fitted.a <- fitted.a(df.final.asca,asca.fit,groups,1,ASCA.2f_leverage)
-plot.leverage_spe(asca.fitted.a,sd,size=6)
-```
-
 
 ```{r asca original}
-# asca.fit.original <- ASCA.2f(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
-# asca.original.fitted <- fitted(df.final.asca,asca.fit.original,groups,1,ASCA.2f)
-#asca.original.selected <- plot.leverage_spe(asca.original.fitted,sd,title = 'original leverage and SPE with 2 PCs',size=6,tag = 'B')
-#plot(asca.original.selected)
+asca.fit.original <- ASCA.2f(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
+asca.original.fitted <- fitted(df.final.asca,asca.fit.original,groups,1,ASCA.2f)
+asca.original.selected <- plot.leverage_spe(asca.original.fitted,sd,title = 'original leverage and SPE with 2 PCs',size=6,tag = 'B')
+plot(asca.original.selected)
 ```
 
 ```{r}
-#improved_loadings <- plot.submodels(asca.fitted,asca.fit,Fac,size = 6, tag = 'D')
-#improved_loading.pc1 <- improved_loadings$loadings$PC1
+improved_loadings <- plot.submodels(asca.fitted,asca.fit,Fac,size = 6, tag = 'D')
+improved_loading.pc1 <- improved_loadings$loadings$PC1
 ```
 
 ```{r}
@@ -197,11 +192,8 @@ plot.leverage_spe(asca.fitted.a,sd,size=6)
 
 
 ```{r}
-#original_loading <- plot.submodels(asca.fitted = asca.original.fitted,asca.fit.original,Fac,size = 6, tag = 'C')
-#original_loading.pc1 <- original_loading$loadings$PC1
-#original_loading$loadings$PC2
-#plot(original_loading$leverage_spe)
+original_loading <- plot.submodels(asca.fitted = asca.original.fitted,asca.fit.original,Fac,size = 6, tag = 'C')
+original_loading.pc1 <- original_loading$loadings$PC1
+original_loading$loadings$PC2
+plot(original_loading$leverage_spe)
 ```
-
-
-

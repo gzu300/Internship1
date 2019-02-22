@@ -16,7 +16,6 @@ time=c(0,1,2,3,4)#time points
 White noise is N(0,0.2)
 ```{r trend}
 source('utils.R')
-set.seed(999)
 
 
 rep <- 4
@@ -84,19 +83,23 @@ plot_metabolites <- function(df,range){
     theme(legend.title = element_text(size = 5))+
     facet_wrap(metabolites~.)
 }
-plot_a_metabolite <- function(df,FUN,which){
+plot_a_metabolite <- function(df,FUN,which,...){
   df.final <- df
   trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[which,])
   ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
     geom_point()+
-    stat_summary(fun.y = FUN,geom = 'line')
+    stat_summary(fun.y = FUN,geom = 'line')+
+    labs(...)
 }
 ```
 
 ```{r plot 1:27}
 plot_metabolites(df.final.masigpro,1:17)
 # plot_metabolites(df.final.masigpro,18:36)
-plot_metabolites(df.final.masigpro,37:51)
+plot_metabolites(df.final.masigpro,21:40)
+sim.real.pattern <- plot_a_metabolite(df.final.masigpro,mean,colnames[1],tag='A')
+sim.real.pattern3 <- plot_a_metabolite(df.final.masigpro,mean,colnames[21],tag='B')
+sim.real.pattern3
 ```
 
 ```{r}
@@ -158,7 +161,7 @@ source('ASCA-genes.1.2.1/sourceASCA.R')
 asca.fit <- ASCA.2f_leverage(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
 
 asca.fitted <- fitted(df.final.asca,asca.fit,groups,50,ASCA.2f_leverage)
-asca.selected <- plot.leverage_spe(asca.fitted,sd,size=6,tag = 'A')
+asca.selected <- plot.leverage_spe(asca.fitted,sd,size=6,tag = 'C')
 print(sort(colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]))
 print(sort(masigpro.fit$summary[,2]))
 
@@ -166,11 +169,12 @@ print(sort(masigpro.fit$summary[,2]))
 
 ```{r}
 plot(asca.selected)
+lev.spe.sim.real <- asca.selected
 ```
 
 ```{r asca original}
 asca.fit.original <- ASCA.2f(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
-asca.original.fitted <- fitted(df.final.asca,asca.fit.original,groups,50,ASCA.2f)
+asca.original.fitted <- fitted(df.final.asca,asca.fit.original,groups,1,ASCA.2f)
 asca.original.selected <- plot.leverage_spe(asca.original.fitted,sd,title = 'original leverage and SPE with 2 PCs',size=6,tag = 'B')
 plot(asca.original.selected)
 ```
@@ -194,8 +198,10 @@ original_loading$loadings$PC2
 plot(original_loading$leverage_spe)
 ```
 ```{r}
-#setwd('../../Google Drive/BDA_internship/thesis/Mythesis/data/')
+setwd('../../Google Drive/BDA_internship/thesis/Mythesis/data/')
 # setwd('D:/google drive/BDA_internship/thesis/Mythesis/data/')
 # save(list = c('df.var.realdata','asca.selected','asca.original.selected','improved_loading.pc1','original_loading.pc1', 'venn_list','ascaonly','masigproonly'),file = 'data.RData')
+# save(list = c('sim.real.pattern','lev.spe.sim.real','sim.real.pattern3','sim.asca.pattern','lev.spe.sim.asca'),file = 'sim.RData')
+save(list = c('sim.masigpro.pattern','lev.spe.sim.masigpro'),file = 'simmasigpro.RData')
 ```
 

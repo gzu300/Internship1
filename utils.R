@@ -207,6 +207,35 @@ fitted <- function(df.final,asca.fit,groups,R,which_leverage){
   names(output) <- c('lev_limit','spe_lim','stats_for_plot')
   output
 }
+
+fitted.a <- function(df.final,asca.fit,groups,R,which_leverage){
+  #attention: df.final. rows are features(eg.metabolites), columns are samples.
+  #groups is a vector of strings or numbers specifies patterns of variables. 
+  #it needs to be the same length as variables. same pattern gives the same tag.
+  #R is the number of permutations
+  #which_leverage argument: improved leverage is 'ASCA.2f_leverage'. original leverage is 'ASCA.2f'
+  
+  ##original leverage loading normalised to 1
+  ##improved leverage scores normalised to 1
+  
+  lev.lim <- leverage.lims(df.final,R=R,FUN = which_leverage,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = 0.05,showvar = F, showscree = F)$Cutoff[[1]]
+  spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.01)[[1]]
+  asca.fit_leverage <- which_leverage(t(df.final),Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,showvar = F, showscree = F)
+  
+  leverage <- asca.fit_leverage$Model.a$leverage
+  spe <- asca.fit_leverage$Model.a$SPE
+  #assemble datafram for ggplot2
+  lev.spe.toplot <- data.frame(leverage=leverage,
+                               spe=spe,
+                               metabolites=1:nrow(df.final),
+                               groups=groups,
+                               predicted=(leverage>lev.lim),
+                               truth=(groups != 'flat')
+  )
+  output <- list(lev.lim,spe.lim,lev.spe.toplot)
+  names(output) <- c('lev_limit','spe_lim','stats_for_plot')
+  output
+}
 ########stats###########
 stats <- function(fitted.data){
   FP <- sum(fitted.data$predicted&!fitted.data$truth)
@@ -297,11 +326,12 @@ plot_metabolites <- function(df,range,...){
     labs(...)
   output
 }
-plot_a_metabolite <- function(df,FUN,which){
+plot_a_metabolite <- function(df,FUN,which,...){
   df.final <- df
   trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[which,])
   ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
     geom_point()+
     stat_summary(fun.y = FUN,geom = 'line')+
-    geom_smooth(method = 'lm', formula = y~poly(x,2),se = F,linetype = '3313')
+    geom_smooth(method = 'lm', formula = y~poly(x,2),se = F,linetype = '3313')+
+    labs(...)
 }

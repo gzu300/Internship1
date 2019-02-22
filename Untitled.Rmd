@@ -1,7 +1,5 @@
 ---
 title: "Untitled"
-author: "zhu"
-date: "21/02/2019"
 output: html_document
 ---
 
@@ -17,48 +15,97 @@ time=c(0,1,2,3,4)#time points
 ```
 White noise is N(0,0.2)
 ```{r trend}
-set.seed(999)
-# #y1 <- 0.01*time+0.01*time^2+0.01*time^3+0.01*time^4
-# ctrl <- 0.01*time+0.1
-# tre1 <- -0.01*time-0.1
-# fluctuate <- c(2,-2,2,-2,2,-2)
-# notrend <- rep(0,6)
-# y1 <- c(notrend)
-# y12 <- fluctuate
-# 
-# y2 <- c(notrend)
-# y22 <- fluctuate
-# 
-# y3 <- c(notrend)
-# y32 <- fluctuate
+source('utils.R')
+
 
 rep <- 4
-sd <- 0.2
-ctrl <- 0.01*time+0.1
-tre1 <- -0.01*time-0.1
-fluctuate <- list(2,0,2,0,2)
-notrend <- rep(list(0),5)
-ctrl <- notrend
-tre1 <- fluctuate
-tre2 <- -0.1*time-0.1
+sd <- 0.4
 
-trend1 <- append(ctrl,tre1)
-trend2 <- append(ctrl,tre1)
-trend3 <- append(ctrl,tre2)
-trend4 <- append(ctrl,ctrl)
-ftrs_in_pat <- list(15,15,1,55-31)
+tre1 <- list(3,4,5,5,6)
+tre2 <- list(3,4,5,4,3)
+notrend <- rep(list(0),5)
+tre3 <- list(2.5,3.5,4.5,4.7,5)
+
+
+trend1 <- append(tre1,map(tre1,~(.+0.8)*1))
+trend2 <- append(tre1,map(tre1,~(.+0.8)*1))
+trend3 <- append(tre1,map(tre1,~(.-0.8)*1))
+trend4 <- append(notrend,map(notrend,~.*1))
+
+# trend1 <- append(notrend,notrend)
+# trend2 <- append(notrend,notrend)
+# trend3 <- append(notrend,notrend)
+# trend4 <- append(notrend,notrend)
+#trend4 <- append(tre3,tre3)
+ftrs_in_pat <- list(10,10,5,55-25)
 pat_names <- list('one','two','three','flat')
 
-source('utils.R')
 simulation <- create.simulation(pat_names.list = pat_names,ftrs_in_pat.list = ftrs_in_pat,replicates = rep,sd = sd,trend1,trend2,trend3,trend4)
 # simulation <- generate_data.same_var(p1 = 10,p2 = 10,p3 = 1,neg = 35,var=0.2)
 df.final <- simulation$df
 groups <- simulation$groups
+
+df.final <- data.frame(t(df.final))
+colnames <- colnames(df.final)
+
+df.final.masigpro <- t(df.final)#for masigpro
+df.final.asca <- t(scale(df.final))#for asca
+
+
+
+plot.mean_sd <- function(df,...){
+  df$togroup <- rep(1:10,each=4)
+  mean_sd <- df %>% 
+    group_by(togroup) %>% 
+    summarise_all(.,funs(mean,sd)) %>% 
+    select(.,-togroup) %>% 
+    flatten()
+  
+  plot(mean_sd[1:550],mean_sd[551:1100],type = 'p',xlab = 'mean',ylab = 'sd',...)
+  
+}
+
+plot.mean_sd(df.final)
+```
+
+```{r function plot metabolites}
+plot_metabolites <- function(df,range){
+  df.final <- df
+  df.toplot <- data.frame(t(df.final[range,]))
+  df.toplot$time <- rep(rep(time,each=r),i)
+  df.toplot$treatment <- rep(1:2,each=r*j)
+  a <- df.toplot %>% 
+    gather(key = metabolites,value = value,1:length(range))
+  
+  ggplot(a,aes(x=time,y=value,color=factor(treatment)))+
+    geom_point(size=0.5)+
+    stat_summary(fun.y = median,geom = 'line')+
+    theme(legend.title = element_text(size = 5))+
+    facet_wrap(metabolites~.)
+}
+plot_a_metabolite <- function(df,FUN,which,...){
+  df.final <- df
+  trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[which,])
+  ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
+    geom_point()+
+    stat_summary(fun.y = FUN,geom = 'line')+
+    labs(...)
+}
+```
+
+```{r plot 1:27}
+plot_metabolites(df.final.masigpro,1:17)
+# plot_metabolites(df.final.masigpro,18:36)
+plot_metabolites(df.final.masigpro,37:51)
+sim.real.pattern <- plot_a_metabolite(df.final.masigpro,mean,colnames[1],tag='A')
+sim.real.pattern3 <- plot_a_metabolite(df.final.masigpro,mean,colnames[21],tag='B')
+sim.real.pattern3
 ```
 
 ```{r}
 calculate.ss <- function(tag,df.clean){
   mean.grand <- df.clean %>% 
+    ungroup() %>% 
     mutate_all(funs(mean))
   df.clean$tag <- tag
   mean.sub <- df.clean %>%
@@ -71,111 +118,81 @@ calculate.ss <- function(tag,df.clean){
   # mean.sub
   
 }
-df.clean <- data.frame(t(df.final))
+
+df.clean <- df.final
+mean.grand <- df.clean %>% 
+  ungroup() %>% 
+  mutate_all(funs(mean))
 ss.treatment <- calculate.ss(rep(1:2,each=20),df.clean)
 ss.time <- calculate.ss(rep(rep(1:5,each=4),2),df.clean)
-df.clean$tag <- rep(1:10,each=4)
-ss.replicate <- df.clean %>% 
-  group_by(tag) %>% 
-  mutate_all(.,funs((.-mean(.))^2)) %>% 
-  ungroup() %>% 
-  select(.,-tag)
+df.clean$togroup <- rep(1:10,each=4)
+ss.replicate <- df.clean %>%
+  group_by(togroup) %>% 
+  mutate_all(.,funs((.-mean(.))^2))
+
 total.sum <- sum(ss.treatment,ss.time,ss.replicate)
 percent_var.treatment <- sum(ss.treatment)/total.sum
 percent_var.time <- sum(ss.time)/total.sum
 percent_var.rep <- sum(ss.replicate)/total.sum
 
-df.var <- data.frame(sourc_of_variance=c('treatment','time','rep'),ss.percentage=c(percent_var.treatment*100,percent_var.time*100,percent_var.rep*100))
-print(df.var)
+df.var.realdata <- data.frame(source=c('treatment','time','rep'),ss.percentage=c(percent_var.treatment*100,percent_var.time*100,percent_var.rep*100))
+print(df.var.realdata)
 ```
 
-
-```{r plot raw data metabolite one}
-trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[5,])
-ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
-  geom_point()+
-  stat_summary(fun.y = mean,geom = 'line')+
-  labs(title = 'pattern')
-```
-```{r plot raw data metabolite two}
-trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[31,])
-ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
-  geom_point()+
-  stat_summary(fun.y = mean,geom = 'line')+
-  labs(title = 'flat')
-```
-
-There are 21 metabolites with the differential expression shown in the above linear function and 200 metabolites with flat expression.
-
-```{r check correlation,include=F}
-#cov(t(df.final[c(1,11,21,31),]))
-knitr::kable(cor(t(df.final[19:24,])),caption = 'correlations')
-```
-
-
-```{r asca-gene design matrix and fit, message=F, warning=F}
-#design matrix
-mx <- asca.design.matrix(i,j,r,time)
-#fit model
-type=1
-Fac=c(1,1,1,1)
-asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = T)
-print(asca.fit$Model.bab$var.exp)
-```
-
-Screeplot shows that 1-2 PCs to be included for submodel b.ab(treatment+interaction). Here 2 pcs were selected
-
-```{r screeplot of submodel ab,eval=F}
-ab <- asca.fit$Model.ab$data
-plot(rep(1:6,2),ab[,1])
-```
-
-```{r leverage and spe plot}
-asca.fitted <- fitted(df.final,asca.fit,groups,2,which_leverage = ASCA.2f_leverage)
-asca.fitted.original <- fitted(df.final,asca.fit,groups,2,which_leverage = ASCA.2f)
-leverages_spe <- plot.leverage_spe(asca.fitted,0.2,size = 10)
-plot(leverages_spe)
-```
-
-With 2 PCs selected, 10 out of 12 differential expressed metabolites corrected identified, fall into right-bottom quadrant.
-
-```{r score plot}
-plot.submodels_score(asca.fit,i,j)
-```
-
-score plot of submodel b.ab shows a clear seperation between treatment1 and treatment2. 
-
-```{r loading plot}
-plot.submodels_loading(asca.fit,groups,size = 10)
-```
-
-```{r residual plot}
-# residuals <- asca.fit$Model.bab$data-(asca.fit$Model.bab$scores%*%t(asca.fit$Model.bab$loadings))
-# matplot(residuals[,leverages_spe[[2]]],type='l',col = 'red')
-# matplot(residuals[,-leverages_spe[[2]]],type = 'l',col = 'grey',add=T)
-```
-
-
-loading plot shows differentially expressed metabolites making high contribution in this pc.
-
-```{r masigpro design matrix and fit,results=T}
+```{r masigpro,results=T}
 masigpro.design <- design_matrix(i,j,r,time)
-design <- make.design.matrix(edesign = masigpro.design,degree = 2)
+degree <- 2
+design <- make.design.matrix(edesign = masigpro.design,degree = degree)
+dis <- design$dis
 edesign <- design$edesign
-colnames(df.final) <- rownames(edesign)
+colnames(df.final.masigpro) <- rownames(edesign)
 
-masigpro.fit <- maSigPro(df.final,masigpro.design,degree=2,step.method = 'forward')
-toplot <- rownames(masigpro.fit$summary)
-masigpro.fit$summary
+masigpro.fit <- maSigPro(df.final.masigpro,masigpro.design,degree=degree,rsq = 0.4)
+knitr::kable(masigpro.fit$summary)
+toplot <- rownames(masigpro.fit$sig.genes$treatment2vstreatment1$sig.profiles)
 ```
 
-However, masigpro could not identify any significant abnormal metabolites.
-```{r plot raw data metabolite2,eval=F}
-trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[20,])
-ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
-  geom_point()+
-  stat_summary(fun.y = mean,geom = 'line')
+```{r asca}
+mx <- asca.design.matrix(i,j,r,time)
+
+Fac=c(1,1,1,2)
+type=1
+source('ASCA-genes.1.2.1/sourceASCA.R')
+asca.fit <- ASCA.2f_leverage(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
+
+asca.fitted <- fitted(df.final.asca,asca.fit,groups,1,ASCA.2f_leverage)
+asca.selected <- plot.leverage_spe(asca.fitted,sd,size=6,tag = 'C')
+print(sort(colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]))
+print(sort(masigpro.fit$summary[,2]))
 ```
+
 ```{r}
-plots <- plot.submodels(asca.fitted,asca.fit,Fac)
+plot(asca.selected)
+#lev.spe.sim.real <- asca.selected
+```
+
+```{r asca original}
+# asca.fit.original <- ASCA.2f(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
+# asca.original.fitted <- fitted(df.final.asca,asca.fit.original,groups,1,ASCA.2f)
+#asca.original.selected <- plot.leverage_spe(asca.original.fitted,sd,title = 'original leverage and SPE with 2 PCs',size=6,tag = 'B')
+#plot(asca.original.selected)
+```
+
+```{r}
+#improved_loadings <- plot.submodels(asca.fitted,asca.fit,Fac,size = 6, tag = 'D')
+#improved_loading.pc1 <- improved_loadings$loadings$PC1
+```
+
+```{r}
+# barplot(a$permut_model$Model.bab$loadings[,1])
+# barplot(b$permut_model$Model.bab$loadings[,1])
+```
+
+
+
+```{r}
+#original_loading <- plot.submodels(asca.fitted = asca.original.fitted,asca.fit.original,Fac,size = 6, tag = 'C')
+#original_loading.pc1 <- original_loading$loadings$PC1
+#original_loading$loadings$PC2
+#plot(original_loading$leverage_spe)
 ```
