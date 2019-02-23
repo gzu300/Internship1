@@ -196,12 +196,11 @@ rmsecv
 
 
 ```{r,results=T}
-asca.fitted <- fitted(df.final,asca.fit,groups = colnames,100,ASCA.2f_leverage)
-asca.selected <- plot.leverage_spe(asca.fitted,2,size=10)
-plot(asca.selected)
-print(sort(colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]))
+permut_wrapped <- wrap.permutation.info(df.final,asca.fit,groups = colnames,5,ASCA.2f_leverage)
+
+print(permut_wrapped$selected_features)
 print(sort(masigpro.fit$summary[,2]))
-venn_list <- list(maSigpro = sort(masigpro.fit$summary[,2]), ASCA.gene = sort(colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]))
+venn_list <- list(maSigpro = sort(masigpro.fit$summary[,2]), ASCA.gene = sort(colnames[asca.fit$Model.bab$leverage>permut_wrapped$lev_limit]))
 venn::venn(venn_list)
 ```
 
