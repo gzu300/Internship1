@@ -73,12 +73,12 @@ wrap.permutation.info <- function(df.final,asca.fit,groups,R,which_leverage,alph
   
   permutated.data <- leverage.lims(df.final,R=R,FUN = which_leverage,Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,alpha = alpha,showvar = F, showscree = F)
   permu.data <- permutated.data$NullDistribution$Model.bab
-  lev.lim <- permutated.data$Cutoff[[2]]
-  spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.01)[[2]]
-  asca.fit_leverage <- which_leverage(t(df.final),Designa = mx$j, Designb = mx$i,Fac = Fac,type = type,showvar = F, showscree = F)
-  
-  leverage <- asca.fit_leverage$Model.bab$leverage
+  lev.lim <- permutated.data$Cutoff[[2]]#leverage threshold
+  spe.lim <- SPE.lims(my.asca = asca.fit,alpha = 0.01)[[2]]#spe threshold
+  leverage <- asca.fit$Model.bab$leverage
   spe <- asca.fit_leverage$Model.bab$SPE
+  selected_features <- sort(groups[leverage>lev.lim])#list of features' leverage > threshold
+  
   #assemble dataframe for leverage vs spe as well as stats for prediction accuracy. FP, FN... can be calculated in stats function below
   lev.spe.toplot <- data.frame(leverage=leverage,
                                spe=spe,
@@ -87,10 +87,17 @@ wrap.permutation.info <- function(df.final,asca.fit,groups,R,which_leverage,alph
                                predicted=(leverage>lev.lim),
                                truth=(groups != 'flat')
                                )
-  selected_features <- sort(groups[leverage>lev.lim])
+  
   Nulldist_plot <- plot.NullDistribution(permu.data,asca.fit$Model.bab$leverage,groups,lev.lim,R)
-  output <- list(lev_limit=lev.lim, spe_lim=spe.lim, stats_for_plot=lev.spe.toplot, selected_features=selected_features, Null_distribution_plot=Nulldist_plot)
-  submodel_plots <- plot.submodels(permut_wrapped,asca.fit, groups=groups, Fac=Fac, size=10,...)
+  
+  output <- list(lev_limit=lev.lim, 
+                 spe_lim=spe.lim, 
+                 stats_for_plot=lev.spe.toplot, 
+                 selected_features=selected_features, 
+                 Null_distribution_plot=Nulldist_plot)
+  
+  submodel_plots <- plot.submodels(output,asca.fit, groups=groups, Fac=Fac, size=10,...)
+  
   output <- c(output, plots_for_submodel=submodel_plots)
   output
 }
@@ -108,7 +115,6 @@ stats <- function(permut_wrapped){
 
 #####plots########
 
-#plot.leverage_spe(df.final,asca.fit, groups)
 plot.leverage_spe <- function(permut_wrapped, sd=sd,title = paste('improved leverage and SPE with',Fac[3],'PCs'),size,...){
   plot <- ggplot(data = permut_wrapped$stats_for_plot,aes(x=leverage,y=spe,color=groups))+
     geom_point()+

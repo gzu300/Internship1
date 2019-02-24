@@ -18,7 +18,7 @@ library(knitr)
 colnames <- colnames(read_xlsx('macrophage%20polarization.xlsx',range = 'PeakArea!I1:BL1'))
 df <- read_xlsx('macrophage%20polarization.xlsx',range = 'PeakArea!I4:BL43',col_names = colnames)
 #df.raw <- read_xlsx('macrophage%20polarization.xlsx',range = 'PeakArea!I4:BL43',col_names = colnames)
-rm(colnames)
+#rm(colnames)
 
 i=2
 j=5
@@ -26,7 +26,8 @@ r=4
 time=c(0,2,6,10,24)
 
 df$togroup <- rep(1:10,each=4)
-df[20,] <- df[19,]
+df[20,] <- df[17:19,] %>% 
+  summarise_all(.,funs(mean))
 df.clean <- df %>% 
   group_by(togroup) %>% 
   mutate_all(~ifelse(is.na(.x), mean(.x, na.rm = TRUE), .x))#fill NA with mean of replicates. 
@@ -59,7 +60,7 @@ df.log$togroup <- NULL
 
 df.final.masigpro <- t(df.log)#for masigpro
 df.final <- t(scale(df.log))#for asca
-colnames <- rownames(df.final)
+colnames1 <- rownames(df.final)
 
 ```
 

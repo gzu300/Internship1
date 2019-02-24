@@ -47,12 +47,12 @@ PCA.GENES.unorm_loading<-function(X)
   Xoff<-X-(cbind(matrix(1,p,1))%*%rbind(offset))
   #eigen command sorts the eigenvalues in decreasing orden.
   
-  eigen<-eigen(Xoff%*%t(Xoff)/(p-1))
+  eigen<-eigen(Xoff%*%t(Xoff)/(p-1))#eigen vector is normalized to unit length
   var<-cbind(eigen$values/sum(eigen$values),cumsum(eigen$values/sum(eigen$values)))
   #print('performing PCA for leverage')
   
-  scores.normed<-eigen$vectors# this c*cT's eigen vector which is actually normalized score in PCA.
-  loading.unormed<-t(Xoff)%*%scores.normed#it's easy, thanks to this PCA function
+  scores.normed<-eigen$vectors# this is the score in unit length in our pca model
+  loading.unormed<-t(Xoff)%*%scores.normed
   
 
   
@@ -61,12 +61,3 @@ PCA.GENES.unorm_loading<-function(X)
   output
 }
 
-# X <- matrix(c(5,-1,5,7),nrow = 2)
-# b <- PCA.GENES(X)
-# a <- PCA.GENES.unorm_loading(X)
-# 
-# length.score <- diag(sqrt(t(b$scores)%*%b$scores))
-# normed.score <- sweep(b$score,MARGIN = 2,STATS = length.score,"/")
-# 
-# loading.unormed <- t(X)%*%normed.score
-# loading.unormed_a <- a$loadings.unormed
