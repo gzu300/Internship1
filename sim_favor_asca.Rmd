@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE,results = F)
 i=2#treatment
 j=5#time
 r=4#replicate
-time=c(0,1,2,3,4)#time points
+time=c(0,2,6,10,24)#time points
 ```
 White noise is N(0,0.2)
 ```{r trend}
@@ -35,13 +35,13 @@ set.seed(999)
 # y32 <- fluctuate
 
 rep <- 4
-sd <- 0.2
+sd <- 0.6
 ctrl <- 0.01*time+0.1
 tre1 <- -0.01*time-0.1
-fluctuate <- list(1,0,1,0,1)
+fluctuate <- list(1.5,1.5,1.5,1.5,1.5)
 notrend <- rep(list(0),5)
 ctrl <- notrend
-tre1 <- fluctuate
+tre1 <- list(-1,-0.5,0,0.5,1)
 tre2 <- fluctuate
 
 trend1 <- append(ctrl,tre2)
@@ -98,7 +98,7 @@ ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
   geom_point()+
   stat_summary(fun.y = mean,geom = 'line')+
   labs(title = 'pattern')
-sim.asca.pattern <- plot_a_metabolite(df.final,mean,'one',tag='A')
+sim_favor_asca_pattern <- plot_a_metabolite(df.final,mean,'one',tag='A')
 ```
 ```{r plot raw data metabolite two}
 trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[31,])
@@ -122,7 +122,7 @@ mx <- asca.design.matrix(i,j,r,time)
 #fit model
 type=1
 Fac=c(1,1,1,1)
-asca.fit <- ASCA.2f(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = T)
+asca.fit <- ASCA.2f_leverage(X = t(df.final),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac,showvar = F,showscree = T)
 print(asca.fit$Model.bab$var.exp)
 ```
 
@@ -134,11 +134,9 @@ plot(rep(1:6,2),ab[,1])
 ```
 
 ```{r leverage and spe plot}
-asca.fitted <- fitted(df.final,asca.fit,groups,2,which_leverage = ASCA.2f_leverage)
-asca.fitted.original <- fitted(df.final,asca.fit,groups,2,which_leverage = ASCA.2f)
-leverages_spe <- plot.leverage_spe(asca.fitted,0.2,size = 10,tag='B')
-lev.spe.sim.asca <- leverages_spe
-plot(leverages_spe)
+warpped.info <- wrap.permutation.info(df.final = df.final,asca.fit = asca.fit,groups = groups,R = 100,which_leverage = ASCA.2f_leverage,tag='B')
+sim_favor_asca <- warpped.info$plots_for_submodel.leverage_spe
+plot(warpped.info$plots_for_submodel.leverage_spe)
 ```
 
 With 2 PCs selected, 10 out of 12 differential expressed metabolites corrected identified, fall into right-bottom quadrant.
@@ -170,7 +168,7 @@ colnames(df.final) <- rownames(edesign)
 
 masigpro.fit <- maSigPro(df.final,masigpro.design,degree=2,step.method = 'forward')
 toplot <- rownames(masigpro.fit$summary)
-masigpro.fit$summary
+kable(masigpro.fit$summary)
 ```
 
 However, masigpro could not identify any significant abnormal metabolites.

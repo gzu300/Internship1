@@ -60,7 +60,7 @@ df.log$togroup <- NULL
 
 df.final.masigpro <- t(df.log)#for masigpro
 df.final <- t(scale(df.log))#for asca
-colnames1 <- rownames(df.final)
+colnames <- rownames(df.final)
 
 ```
 
@@ -197,12 +197,14 @@ rmsecv
 
 
 ```{r,results=T}
-permut_wrapped <- wrap.permutation.info(df.final,asca.fit,groups = colnames,5,ASCA.2f_leverage)
+permut_wrapped_0.05 <- wrap.permutation.info(df.final = df.final,asca.fit = asca.fit,groups = colnames,R = 100,which_leverage = ASCA.2f_leverage)
+permut_wrapped_0.01 <- wrap.permutation.info(df.final = df.final,asca.fit = asca.fit,groups = colnames,R = 100,which_leverage = ASCA.2f_leverage,alpha=0.01)
 
-print(permut_wrapped$selected_features)
-print(sort(masigpro.fit$summary[,2]))
-venn_list <- list(maSigpro = sort(masigpro.fit$summary[,2]), ASCA.gene = sort(colnames[asca.fit$Model.bab$leverage>permut_wrapped$lev_limit]))
-venn::venn(venn_list)
+Null.dist.0.05 <- permut_wrapped_0.05$Null_distribution_plot
+Null.dist.0.01 <- permut_wrapped_0.01$Null_distribution_plot
+#print(sort(masigpro.fit$summary[,2]))
+# venn_list <- list(maSigpro = sort(masigpro.fit$summary[,2]), ASCA.gene = sort(colnames[asca.fit$Model.bab$leverage>permut_wrapped$lev_limit]))
+# venn::venn(venn_list)
 ```
 
 in asca-gene but not masigpro

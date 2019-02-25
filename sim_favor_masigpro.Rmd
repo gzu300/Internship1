@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE,results = F)
 i=2#treatment
 j=5#time
 r=4#replicate
-time=c(0,1,2,3,4)#time points
+time=c(0,2,6,10,24)#time points
 ```
 White noise is N(0,0.2)
 ```{r trend}
@@ -37,7 +37,7 @@ trend4 <- append(notrend,map(notrend,~.*1))
 # trend3 <- append(notrend,notrend)
 # trend4 <- append(notrend,notrend)
 #trend4 <- append(tre3,tre3)
-ftrs_in_pat <- list(10,10,5,55-25)
+ftrs_in_pat <- list(15,15,1,55-25)
 pat_names <- list('one','two','three','flat')
 
 simulation <- create.simulation(pat_names.list = pat_names,ftrs_in_pat.list = ftrs_in_pat,replicates = rep,sd = sd,trend1,trend2,trend3,trend4)
@@ -94,10 +94,10 @@ plot_a_metabolite <- function(df,FUN,which,...){
 ```
 
 ```{r plot 1:27}
-plot_metabolites(df.final.masigpro,1:17)
-# plot_metabolites(df.final.masigpro,18:36)
-plot_metabolites(df.final.masigpro,37:51)
-sim.masigpro.pattern <- plot_a_metabolite(df.final.masigpro,mean,colnames[1],tag='A')
+# plot_metabolites(df.final.masigpro,1:17)
+# # plot_metabolites(df.final.masigpro,18:36)
+# plot_metabolites(df.final.masigpro,37:51)
+sim_favor_masigpro_pattern <- plot_a_metabolite(df.final.masigpro,mean,colnames[1],tag='A')
 # sim.real.pattern3 <- plot_a_metabolite(df.final.masigpro,mean,colnames[21],tag='B')
 # sim.real.pattern3
 ```
@@ -158,31 +158,15 @@ mx <- asca.design.matrix(i,j,r,time)
 Fac=c(1,1,1,2)
 type=1
 source('ASCA-genes.1.2.1/sourceASCA.R')
-asca.fit <- ASCA.2f_leverage(X = t(df.final.masigpro),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
+asca.fit <- ASCA.2f_leverage(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
 
-asca.fitted <- fitted(df.final.asca,asca.fit,groups,1,ASCA.2f_leverage)
-lev.spe.sim.masigpro <- plot.leverage_spe(asca.fitted,sd,size=6,tag = 'B')
-print(sort(colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]))
-print(sort(masigpro.fit$summary[,2]))
+wrapped_info_favor_masigpro <- wrap.permutation.info(df.final = df.final.asca,asca.fit = asca.fit,groups = groups,R = 100,which_leverage = ASCA.2f_leverage)
+sim_favor_masigpro <- wrapped_info_favor_masigpro$plots_for_submodel.leverage_spe
+# lev.spe.sim.masigpro <- plot.leverage_spe(asca.fitted,sd,size=6,tag = 'B')
+# print(sort(colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]))
+# print(sort(masigpro.fit$summary[,2]))
 ```
 
-```{r}
-plot(asca.selected)
-#lev.spe.sim.real <- asca.selected
-```
-
-```{r}
-asca.fitted.a <- fitted.a(df.final.asca,asca.fit,groups,1,ASCA.2f_leverage)
-plot.leverage_spe(asca.fitted.a,sd,size=6)
-```
-
-
-```{r asca original}
-# asca.fit.original <- ASCA.2f(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
-# asca.original.fitted <- fitted(df.final.asca,asca.fit.original,groups,1,ASCA.2f)
-#asca.original.selected <- plot.leverage_spe(asca.original.fitted,sd,title = 'original leverage and SPE with 2 PCs',size=6,tag = 'B')
-#plot(asca.original.selected)
-```
 
 ```{r}
 #improved_loadings <- plot.submodels(asca.fitted,asca.fit,Fac,size = 6, tag = 'D')

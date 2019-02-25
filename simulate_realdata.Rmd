@@ -37,7 +37,7 @@ trend4 <- append(notrend,map(notrend,~.*1))
 # trend3 <- append(notrend,notrend)
 # trend4 <- append(notrend,notrend)
 #trend4 <- append(tre3,tre3)
-ftrs_in_pat <- list(10,10,5,55-25)
+ftrs_in_pat <- list(10,10,11,55-25)
 pat_names <- list('one','two','three','flat')
 
 simulation <- create.simulation(pat_names.list = pat_names,ftrs_in_pat.list = ftrs_in_pat,replicates = rep,sd = sd,trend1,trend2,trend3,trend4)
@@ -94,12 +94,12 @@ plot_a_metabolite <- function(df,FUN,which,...){
 ```
 
 ```{r plot 1:27}
-plot_metabolites(df.final.masigpro,1:17)
-# plot_metabolites(df.final.masigpro,18:36)
-plot_metabolites(df.final.masigpro,21:40)
-sim.real.pattern <- plot_a_metabolite(df.final.masigpro,mean,colnames[1],tag='A')
-sim.real.pattern3 <- plot_a_metabolite(df.final.masigpro,mean,colnames[21],tag='B')
-sim.real.pattern3
+# plot_metabolites(df.final.masigpro,1:17)
+# # plot_metabolites(df.final.masigpro,18:36)
+# plot_metabolites(df.final.masigpro,21:40)
+sim_real_pattern <- plot_a_metabolite(df = df.final.masigpro,FUN = mean,which = colnames[1],tag='A')
+sim_real_pattern3 <- plot_a_metabolite(df = df.final.masigpro,FUN = mean,which = colnames[21],tag='B')
+# sim.real.pattern3
 ```
 
 ```{r}
@@ -160,48 +160,24 @@ type=1
 source('ASCA-genes.1.2.1/sourceASCA.R')
 asca.fit <- ASCA.2f_leverage(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
 
-asca.fitted <- fitted(df.final.asca,asca.fit,groups,50,ASCA.2f_leverage)
-asca.selected <- plot.leverage_spe(asca.fitted,sd,size=6,tag = 'C')
-print(sort(colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]))
-print(sort(masigpro.fit$summary[,2]))
-
+wrapped_info_simreal_improved <- wrap.permutation.info(df.final = df.final.asca,asca.fit = asca.fit,groups = groups,R = 100,which_leverage = ASCA.2f_leverage)
+lev_spe_improved <- wrapped_info_simreal_improved$plots_for_submodel.leverage_spe
+violin_improved <- wrapped_info_simreal_improved$Null_distribution_plot
 ```
 
-```{r}
-plot(asca.selected)
-lev.spe.sim.real <- asca.selected
-```
 
 ```{r asca original}
 asca.fit.original <- ASCA.2f(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
-asca.original.fitted <- fitted(df.final.asca,asca.fit.original,groups,1,ASCA.2f)
-asca.original.selected <- plot.leverage_spe(asca.original.fitted,sd,title = 'original leverage and SPE with 2 PCs',size=6,tag = 'B')
-plot(asca.original.selected)
+wrapped_info_simreal_original <- wrap.permutation.info(df.final = df.final.asca,asca.fit = asca.fit.original,groups = groups,R = 100,which_leverage = ASCA.2f)
+lev_spe_original <- wrapped_info_simreal_original$plots_for_submodel.leverage_spe
+violin_original <- wrapped_info_simreal_original$Null_distribution_plot
 ```
 
 ```{r}
-improved_loadings <- plot.submodels(asca.fitted,asca.fit,Fac,size = 6, tag = 'D')
-improved_loading.pc1 <- improved_loadings$loadings$PC1
-```
-
-```{r}
-# barplot(a$permut_model$Model.bab$loadings[,1])
-# barplot(b$permut_model$Model.bab$loadings[,1])
-```
-
-
-
-```{r}
-original_loading <- plot.submodels(asca.fitted = asca.original.fitted,asca.fit.original,Fac,size = 6, tag = 'C')
-original_loading.pc1 <- original_loading$loadings$PC1
-original_loading$loadings$PC2
-plot(original_loading$leverage_spe)
-```
-```{r}
-setwd('../../Google Drive/BDA_internship/thesis/Mythesis/data/')
-# setwd('D:/google drive/BDA_internship/thesis/Mythesis/data/')
-# save(list = c('df.var.realdata','asca.selected','asca.original.selected','improved_loading.pc1','original_loading.pc1', 'venn_list','ascaonly','masigproonly'),file = 'data.RData')
-# save(list = c('sim.real.pattern','lev.spe.sim.real','sim.real.pattern3','sim.asca.pattern','lev.spe.sim.asca'),file = 'sim.RData')
-save(list = c('sim.masigpro.pattern','lev.spe.sim.masigpro'),file = 'simmasigpro.RData')
+# setwd('../../Google Drive/BDA_internship/thesis/Mythesis/data/')
+setwd('D:/google drive/BDA_internship/thesis/Mythesis/data/')
+save(list = c('sim_real_pattern','sim_real_pattern3','df.var.realdata','ascaonly','masigproonly','sim_favor_asca_pattern','sim_favor_asca','sim_favor_masigpro_pattern','sim_favor_masigpro','lev_spe_improved','violin_improved','lev_spe_original','violin_original'),file = 'data.RData')
+# # save(list = c('sim.real.pattern','lev.spe.sim.real','sim.real.pattern3','sim.asca.pattern','lev.spe.sim.asca'),file = 'sim.RData')
+# save(list = c('sim.masigpro.pattern','lev.spe.sim.masigpro'),file = 'simmasigpro.RData')
 ```
 
