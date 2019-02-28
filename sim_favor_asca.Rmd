@@ -45,14 +45,14 @@ tre1 <- list(-1,-0.5,0,0.5,1)
 tre2 <- fluctuate
 
 trend1 <- append(ctrl,tre2)
-trend2 <- append(ctrl,tre2)
-trend3 <- append(ctrl,tre2)
+# trend2 <- append(ctrl,tre2)
+# trend3 <- append(ctrl,tre2)
 trend4 <- append(ctrl,ctrl)
-ftrs_in_pat <- list(15,15,1,55-31)
-pat_names <- list('one','two','three','flat')
+ftrs_in_pat <- list(31,55-31)
+pat_names <- list('one','flat')
 
 source('utils.R')
-simulation <- create.simulation(pat_names.list = pat_names,ftrs_in_pat.list = ftrs_in_pat,replicates = rep,sd = sd,trend1,trend2,trend3,trend4)
+simulation <- create.simulation(pat_names.list = pat_names,ftrs_in_pat.list = ftrs_in_pat,replicates = rep,sd = sd,trend1,trend4)
 # simulation <- generate_data.same_var(p1 = 10,p2 = 10,p3 = 1,neg = 35,var=0.2)
 df.final <- simulation$df
 groups <- simulation$groups
@@ -98,7 +98,8 @@ ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
   geom_point()+
   stat_summary(fun.y = mean,geom = 'line')+
   labs(title = 'pattern')
-sim_favor_asca_pattern <- plot_a_metabolite(df.final,mean,'one',tag='A')
+sim_favor_asca_pattern <- plot_a_metabolite(df = df.final,FUN = mean,which = 'one',tag='A',title = 'Pattern one')
+sim_favor_asca_pattern
 ```
 ```{r plot raw data metabolite two}
 trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[31,])
@@ -137,6 +138,7 @@ plot(rep(1:6,2),ab[,1])
 warpped.info <- wrap.permutation.info(df.final = df.final,asca.fit = asca.fit,groups = groups,R = 100,which_leverage = ASCA.2f_leverage,tag='B')
 sim_favor_asca <- warpped.info$plots_for_submodel.leverage_spe
 plot(warpped.info$plots_for_submodel.leverage_spe)
+warpped.info$Null_distribution_plot
 ```
 
 With 2 PCs selected, 10 out of 12 differential expressed metabolites corrected identified, fall into right-bottom quadrant.
@@ -168,7 +170,7 @@ colnames(df.final) <- rownames(edesign)
 
 masigpro.fit <- maSigPro(df.final,masigpro.design,degree=2,step.method = 'forward')
 toplot <- rownames(masigpro.fit$summary)
-kable(masigpro.fit$summary)
+#kable(masigpro.fit$summary)
 ```
 
 However, masigpro could not identify any significant abnormal metabolites.
@@ -179,6 +181,6 @@ ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
   stat_summary(fun.y = mean,geom = 'line')
 ```
 ```{r}
-plots <- plot.submodels(asca.fitted,asca.fit,Fac)
+#plots <- plot.submodels(asca.fitted,asca.fit,Fac)
 ```
 

@@ -16,7 +16,7 @@ time=c(0,2,6,10,24)#time points
 White noise is N(0,0.2)
 ```{r trend}
 source('utils.R')
-
+set.seed(999)
 
 rep <- 4
 sd <- 0.4
@@ -37,10 +37,10 @@ trend4 <- append(notrend,map(notrend,~.*1))
 # trend3 <- append(notrend,notrend)
 # trend4 <- append(notrend,notrend)
 #trend4 <- append(tre3,tre3)
-ftrs_in_pat <- list(15,15,1,55-25)
-pat_names <- list('one','two','three','flat')
+ftrs_in_pat <- list(31,55-25)
+pat_names <- list('one','flat')
 
-simulation <- create.simulation(pat_names.list = pat_names,ftrs_in_pat.list = ftrs_in_pat,replicates = rep,sd = sd,trend1,trend2,trend3,trend4)
+simulation <- create.simulation(pat_names.list = pat_names,ftrs_in_pat.list = ftrs_in_pat,replicates = rep,sd = sd,trend1,trend4)
 # simulation <- generate_data.same_var(p1 = 10,p2 = 10,p3 = 1,neg = 35,var=0.2)
 df.final <- simulation$df
 groups <- simulation$groups
@@ -69,37 +69,38 @@ df.final.asca <- t(scale(df.final))#for asca
 ```
 
 ```{r function plot metabolites}
-plot_metabolites <- function(df,range){
-  df.final <- df
-  df.toplot <- data.frame(t(df.final[range,]))
-  df.toplot$time <- rep(rep(time,each=r),i)
-  df.toplot$treatment <- rep(1:2,each=r*j)
-  a <- df.toplot %>% 
-    gather(key = metabolites,value = value,1:length(range))
-  
-  ggplot(a,aes(x=time,y=value,color=factor(treatment)))+
-    geom_point(size=0.5)+
-    stat_summary(fun.y = median,geom = 'line')+
-    theme(legend.title = element_text(size = 5))+
-    facet_wrap(metabolites~.)
-}
-plot_a_metabolite <- function(df,FUN,which,...){
-  df.final <- df
-  trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[which,])
-  ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
-    geom_point()+
-    stat_summary(fun.y = FUN,geom = 'line')+
-    labs(...)
-}
+# plot_metabolites <- function(df,range){
+#   df.final <- df
+#   df.toplot <- data.frame(t(df.final[range,]))
+#   df.toplot$time <- rep(rep(time,each=r),i)
+#   df.toplot$treatment <- rep(1:2,each=r*j)
+#   a <- df.toplot %>% 
+#     gather(key = metabolites,value = value,1:length(range))
+#   
+#   ggplot(a,aes(x=time,y=value,color=factor(treatment)))+
+#     geom_point(size=0.5)+
+#     stat_summary(fun.y = median,geom = 'line')+
+#     theme(legend.title = element_text(size = 5))+
+#     facet_wrap(metabolites~.)
+# }
+# plot_a_metabolite <- function(df,FUN,which,...){
+#   df.final <- df
+#   trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[which,])
+#   ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
+#     geom_point()+
+#     stat_summary(fun.y = FUN,geom = 'line')+
+#     labs(...)
+# }
 ```
 
 ```{r plot 1:27}
 # plot_metabolites(df.final.masigpro,1:17)
 # # plot_metabolites(df.final.masigpro,18:36)
 # plot_metabolites(df.final.masigpro,37:51)
-sim_favor_masigpro_pattern <- plot_a_metabolite(df.final.masigpro,mean,colnames[1],tag='A')
+sim_favor_masigpro_pattern <- plot_a_metabolite(df.final.masigpro,mean,colnames[1],tag='A',title = 'Pattern one')
 # sim.real.pattern3 <- plot_a_metabolite(df.final.masigpro,mean,colnames[21],tag='B')
 # sim.real.pattern3
+sim_favor_masigpro_pattern
 ```
 
 ```{r}
@@ -160,8 +161,9 @@ type=1
 source('ASCA-genes.1.2.1/sourceASCA.R')
 asca.fit <- ASCA.2f_leverage(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
 
-wrapped_info_favor_masigpro <- wrap.permutation.info(df.final = df.final.asca,asca.fit = asca.fit,groups = groups,R = 100,which_leverage = ASCA.2f_leverage)
+wrapped_info_favor_masigpro <- wrap.permutation.info(df.final = df.final.asca,asca.fit = asca.fit,groups = groups,R = 100,which_leverage = ASCA.2f_leverage,tag="B")
 sim_favor_masigpro <- wrapped_info_favor_masigpro$plots_for_submodel.leverage_spe
+sim_favor_masigpro
 # lev.spe.sim.masigpro <- plot.leverage_spe(asca.fitted,sd,size=6,tag = 'B')
 # print(sort(colnames[asca.fit$Model.bab$leverage>asca.fitted$lev_limit]))
 # print(sort(masigpro.fit$summary[,2]))

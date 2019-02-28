@@ -108,43 +108,45 @@ knitr::kable(df.var.realdata)
 
 
 ```{r function plot metabolites}
-plot_metabolites <- function(df,range,...){
-  df.final <- df
-  df.toplot <- data.frame(t(df.final[range,]))
-  df.toplot$time <- rep(rep(time,each=r),i)
-  df.toplot$treatment <- rep(1:2,each=r*j)
-  a <- df.toplot %>% 
-    gather(key = metabolites,value = value,1:length(range))
-  
-  output <- ggplot(a,aes(x=time,y=value,color=factor(treatment)))+
-    geom_point(size=0.5)+
-    stat_summary(fun.y = mean,geom = 'line')+
-    theme(legend.title = element_text(size = 5))+
-    facet_wrap(metabolites~., scales = 'free')+
-    geom_smooth(method = 'lm', formula = y~poly(x,2),se = F,linetype = '3313')+
-    labs(...)
-  output
-}
-plot_a_metabolite <- function(df,FUN,which){
-  df.final <- df
-  trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[which,])
-  ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
-    geom_point()+
-    stat_summary(fun.y = FUN,geom = 'line')+
-    geom_smooth(method = 'lm', formula = y~poly(x,2),se = F,linetype = '3313')
-}
+# plot_metabolites <- function(df,range,...){
+#   df.final <- df
+#   df.toplot <- data.frame(t(df.final[range,]))
+#   df.toplot$time <- rep(rep(time,each=r),i)
+#   df.toplot$treatment <- rep(1:2,each=r*j)
+#   a <- df.toplot %>% 
+#     gather(key = metabolites,value = value,1:length(range))
+#   
+#   output <- ggplot(a,aes(x=time,y=value,color=factor(treatment)))+
+#     geom_point(size=0.5)+
+#     stat_summary(fun.y = mean,geom = 'line')+
+#     theme(legend.title = element_text(size = 5))+
+#     facet_wrap(metabolites~., scales = 'free')+
+#     geom_smooth(method = 'lm', formula = y~poly(x,2),se = F,linetype = '3313')+
+#     labs(...)
+#   output
+# }
+# plot_a_metabolite <- function(df,FUN,which){
+#   df.final <- df
+#   trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[which,])
+#   ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
+#     geom_point()+
+#     stat_summary(fun.y = FUN,geom = 'line')+
+#     geom_smooth(method = 'lm', formula = y~poly(x,2),se = F,linetype = '3313')
+# }
 ```
 
 ```{r plot 1:27}
 ascaonly <- plot_metabolites(df.final.masigpro,c('CMP','AMP','ATP'),tag = 'A')
 masigproonly <- plot_metabolites(df.final.masigpro,c("Glycerol-phosphate","Isocitric acid","Lactic Acid"),tag = 'B')
+both <- plot_metabolites(df.final.masigpro,c("CTP","GSH","IMP"),tag = 'B')
 # plot_metabolites(df.final.masigpro,37:51)
 plot(ascaonly)
+both
 ```
 
 ```{r}
-plot_a_metabolite(df.final.masigpro,mean,"ADP")
-plot_a_metabolite(df.final.masigpro,median,"Fructose-1,6-bisphosphate")
+# plot_a_metabolite(df.final.masigpro,mean,"ADP")
+# plot_a_metabolite(df.final.masigpro,median,"Fructose-1,6-bisphosphate")
 ```
 
 ```{r,results=T}
@@ -160,24 +162,10 @@ masigpro.fit <- maSigPro(df.final.masigpro,masigpro.design,degree=degree, rsq = 
 kable(masigpro.fit$summary)
 toplot <- rownames(masigpro.fit$sig.genes$treatment2vstreatment1$sig.profiles)
 ```
-```{r,include=F}
-AA <- df.final.masigpro["CMP",]
-PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'CMP')
-```
 
 ```{r,include=F}
-AA <- df.final.masigpro["AMP",]
-PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector)
-```
-
-```{r,include=F}
-AA <- df.final.masigpro["ATP",]
-PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'ATP')
-```
-
-```{r,include=F}
-AA <- df.final.masigpro["GSSG",]
-PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'GSSG')
+# AA <- df.final.masigpro["GSSG",]
+# PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'GSSG')
 ```
 
 ```{r}
@@ -200,11 +188,14 @@ rmsecv
 permut_wrapped_0.05 <- wrap.permutation.info(df.final = df.final,asca.fit = asca.fit,groups = colnames,R = 100,which_leverage = ASCA.2f_leverage)
 permut_wrapped_0.01 <- wrap.permutation.info(df.final = df.final,asca.fit = asca.fit,groups = colnames,R = 100,which_leverage = ASCA.2f_leverage,alpha=0.01)
 
-Null.dist.0.05 <- permut_wrapped_0.05$Null_distribution_plot
-Null.dist.0.01 <- permut_wrapped_0.01$Null_distribution_plot
-#print(sort(masigpro.fit$summary[,2]))
-# venn_list <- list(maSigpro = sort(masigpro.fit$summary[,2]), ASCA.gene = sort(colnames[asca.fit$Model.bab$leverage>permut_wrapped$lev_limit]))
-# venn::venn(venn_list)
+Nulldist <- permut_wrapped_0.05$Null_distribution_plot+
+  geom_hline(yintercept = permut_wrapped_0.01$lev_limit,color='red')
+ggsave('Nulldist.png',path = '../../Google Drive/BDA_internship/thesis/Mythesis/data/')
+# Nulldist_0.01 <- permut_wrapped_0.01$Null_distribution_plot
+# #print(sort(masigpro.fit$summary[,2]))
+# # venn_list <- list(maSigpro = sort(masigpro.fit$summary[,2]), ASCA.gene = sort(colnames[asca.fit$Model.bab$leverage>permut_wrapped$lev_limit]))
+# # venn::venn(venn_list)
+# Nulldist_0.05
 ```
 
 in asca-gene but not masigpro
@@ -240,15 +231,7 @@ PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design
 AA <- df.final.masigpro["Ascorbic Acid",]
 PlotGroups(AA,edesign = edesign, show.fit = T, dis = dis, groups.vector = design$groups.vector,main = 'Ascorbic Acid')
 ```
-```{r}
-plot.submodels_score(asca.fit,i,j)
-```
-```{r}
-loadings <- plot.submodels_loading(asca.fit,colnames)
-```
-```{r,include=F}
-matplot(asca.fit$Model.bab$data-asca.fit$Model.bab$scores%*%t(asca.fit$Model.bab$loadings),type = 'l')
-```
+
 
 
 

@@ -16,7 +16,7 @@ time=c(0,1,2,3,4)#time points
 White noise is N(0,0.2)
 ```{r trend}
 source('utils.R')
-
+set.seed(999)
 
 rep <- 4
 sd <- 0.6
@@ -68,38 +68,14 @@ plot.mean_sd <- function(df,...){
 plot.mean_sd(df.final)
 ```
 
-```{r function plot metabolites}
-plot_metabolites <- function(df,range){
-  df.final <- df
-  df.toplot <- data.frame(t(df.final[range,]))
-  df.toplot$time <- rep(rep(time,each=r),i)
-  df.toplot$treatment <- rep(1:2,each=r*j)
-  a <- df.toplot %>% 
-    gather(key = metabolites,value = value,1:length(range))
-  
-  ggplot(a,aes(x=time,y=value,color=factor(treatment)))+
-    geom_point(size=0.5)+
-    stat_summary(fun.y = median,geom = 'line')+
-    theme(legend.title = element_text(size = 5))+
-    facet_wrap(metabolites~.)
-}
-plot_a_metabolite <- function(df,FUN,which,...){
-  df.final <- df
-  trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[which,])
-  ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
-    geom_point()+
-    stat_summary(fun.y = FUN,geom = 'line')+
-    labs(...)
-}
-```
 
 ```{r plot 1:27}
-# plot_metabolites(df.final.masigpro,1:17)
+sim_real_patterns <- plot_metabolites(df.final.masigpro,c(1,11,21,32))
 # # plot_metabolites(df.final.masigpro,18:36)
 # plot_metabolites(df.final.masigpro,21:40)
 sim_real_pattern <- plot_a_metabolite(df = df.final.masigpro,FUN = mean,which = colnames[1],tag='A')
 sim_real_pattern3 <- plot_a_metabolite(df = df.final.masigpro,FUN = mean,which = colnames[21],tag='B')
-# sim.real.pattern3
+sim_real_patterns
 ```
 
 ```{r}
@@ -160,23 +136,24 @@ type=1
 source('ASCA-genes.1.2.1/sourceASCA.R')
 asca.fit <- ASCA.2f_leverage(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
 
-wrapped_info_simreal_improved <- wrap.permutation.info(df.final = df.final.asca,asca.fit = asca.fit,groups = groups,R = 100,which_leverage = ASCA.2f_leverage)
+wrapped_info_simreal_improved <- wrap.permutation.info(df.final = df.final.asca,asca.fit = asca.fit,groups = groups,R = 100,which_leverage = ASCA.2f_leverage,tag='B')
 lev_spe_improved <- wrapped_info_simreal_improved$plots_for_submodel.leverage_spe
 violin_improved <- wrapped_info_simreal_improved$Null_distribution_plot
+violin_improved
 ```
 
 
 ```{r asca original}
 asca.fit.original <- ASCA.2f(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
-wrapped_info_simreal_original <- wrap.permutation.info(df.final = df.final.asca,asca.fit = asca.fit.original,groups = groups,R = 100,which_leverage = ASCA.2f)
+wrapped_info_simreal_original <- wrap.permutation.info(df.final = df.final.asca,asca.fit = asca.fit.original,groups = groups,R = 100,which_leverage = ASCA.2f,tag='A',title = paste('original leverage and SPE with',Fac[3],'PCs'))
 lev_spe_original <- wrapped_info_simreal_original$plots_for_submodel.leverage_spe
 violin_original <- wrapped_info_simreal_original$Null_distribution_plot
 ```
 
 ```{r}
-# setwd('../../Google Drive/BDA_internship/thesis/Mythesis/data/')
-setwd('D:/google drive/BDA_internship/thesis/Mythesis/data/')
-save(list = c('sim_real_pattern','sim_real_pattern3','df.var.realdata','ascaonly','masigproonly','sim_favor_asca_pattern','sim_favor_asca','sim_favor_masigpro_pattern','sim_favor_masigpro','lev_spe_improved','violin_improved','lev_spe_original','violin_original'),file = 'data.RData')
+setwd('../../Google Drive/BDA_internship/thesis/Mythesis/data/')
+# setwd('D:/google drive/BDA_internship/thesis/Mythesis/data/')
+save(list = c('sim_real_patterns','sim_real_pattern','sim_real_pattern3','df.var.realdata','both','ascaonly','masigproonly','sim_favor_asca_pattern','sim_favor_asca','sim_favor_masigpro_pattern','sim_favor_masigpro','lev_spe_improved','violin_improved','lev_spe_original','violin_original', 'Nulldist'),file = 'data.RData')
 # # save(list = c('sim.real.pattern','lev.spe.sim.real','sim.real.pattern3','sim.asca.pattern','lev.spe.sim.asca'),file = 'sim.RData')
 # save(list = c('sim.masigpro.pattern','lev.spe.sim.masigpro'),file = 'simmasigpro.RData')
 ```
