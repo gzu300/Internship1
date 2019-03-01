@@ -206,7 +206,7 @@ plot.NullDistribution <- function(permu.data,model.data,colnames,cutoff,R,alpha,
     geom_violin(draw_quantiles = c(1-alpha))+
     geom_point(data = model.leverage,aes(x = metabolites,y = leverage))+
     geom_hline(yintercept = cutoff)+
-    theme(axis.text.x.bottom = element_text(angle = 90,size = 7,hjust = 1,vjust = 0.5),panel.background = element_blank(),legend.position=c(0.5,0.8),axis.title = element_text(size=size),legend.title = element_text(size=size),legend.text = element_text(size=3),legend.key.size = unit(0.08,'cm'), plot.title = element_text(size=size))+
+    theme(axis.text.x.bottom = element_text(angle = 90,size = 7,hjust = 1,vjust = 0.5),panel.background = element_blank(),legend.position=c(0.5,0.8),axis.title = element_text(size=size),legend.title = element_text(size=size),legend.text = element_text(size=3),legend.key.size = unit(0.08,'cm'), plot.title = element_text(size=4))+
     labs(title = paste('Null distribution by',R,'rounds of permutation. alpha:',alpha))
   Nulldist
 }

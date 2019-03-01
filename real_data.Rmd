@@ -15,6 +15,7 @@ knitr::opts_chunk$set(echo = F,message = F,warning = F,results = F)
 library(tidyverse)
 library(readxl)
 library(knitr)
+
 colnames <- colnames(read_xlsx('macrophage%20polarization.xlsx',range = 'PeakArea!I1:BL1'))
 df <- read_xlsx('macrophage%20polarization.xlsx',range = 'PeakArea!I4:BL43',col_names = colnames)
 #df.raw <- read_xlsx('macrophage%20polarization.xlsx',range = 'PeakArea!I4:BL43',col_names = colnames)
@@ -136,6 +137,7 @@ knitr::kable(df.var.realdata)
 ```
 
 ```{r plot 1:27}
+source('utils.R')
 ascaonly <- plot_metabolites(df.final.masigpro,c('CMP','AMP','ATP'),tag = 'A')
 masigproonly <- plot_metabolites(df.final.masigpro,c("Glycerol-phosphate","Isocitric acid","Lactic Acid"),tag = 'B')
 both <- plot_metabolites(df.final.masigpro,c("CTP","GSH","IMP"),tag = 'B')
@@ -150,7 +152,7 @@ both
 ```
 
 ```{r,results=T}
-source('utils.R')
+
 masigpro.design <- design_matrix(i,j,r,time)
 degree <- 2
 design <- make.design.matrix(edesign = masigpro.design,degree = degree)
@@ -190,7 +192,8 @@ permut_wrapped_0.01 <- wrap.permutation.info(df.final = df.final,asca.fit = asca
 
 Nulldist <- permut_wrapped_0.05$Null_distribution_plot+
   geom_hline(yintercept = permut_wrapped_0.01$lev_limit,color='red')
-ggsave('Nulldist.png',path = '../../Google Drive/BDA_internship/thesis/Mythesis/data/')
+#ggsave('Nulldist.png',path = '../../Google Drive/BDA_internship/thesis/Mythesis/data/')
+ggsave('Nulldist.png',path = 'D:/google drive/BDA_internship/thesis/Mythesis/data/')
 # Nulldist_0.01 <- permut_wrapped_0.01$Null_distribution_plot
 # #print(sort(masigpro.fit$summary[,2]))
 # # venn_list <- list(maSigpro = sort(masigpro.fit$summary[,2]), ASCA.gene = sort(colnames[asca.fit$Model.bab$leverage>permut_wrapped$lev_limit]))
