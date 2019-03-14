@@ -16,7 +16,7 @@ time=c(0,1,2,3,4)#time points
 White noise is N(0,0.2)
 ```{r trend}
 source('utils.R')
-set.seed(999)
+#set.seed(999)
 
 rep <- 4
 sd <- 0.6
@@ -151,8 +151,8 @@ violin_original <- wrapped_info_simreal_original$Null_distribution_plot
 ```
 
 ```{r}
-setwd('../../Google Drive/BDA_internship/thesis/Mythesis/data/')
-# setwd('D:/google drive/BDA_internship/thesis/Mythesis/data/')
+# setwd('../../Google Drive/BDA_internship/thesis/Mythesis/data/')
+setwd('D:/google drive/BDA_internship/thesis/Mythesis/data/')
 save(list = c('sim_real_patterns','sim_real_pattern','sim_real_pattern3','df.var.realdata','both','ascaonly','masigproonly','sim_favor_asca_pattern','sim_favor_asca','sim_favor_masigpro_pattern','sim_favor_masigpro','lev_spe_improved','violin_improved','lev_spe_original','violin_original', 'Nulldist'),file = 'data.RData')
 # # save(list = c('sim.real.pattern','lev.spe.sim.real','sim.real.pattern3','sim.asca.pattern','lev.spe.sim.asca'),file = 'sim.RData')
 # save(list = c('sim.masigpro.pattern','lev.spe.sim.masigpro'),file = 'simmasigpro.RData')
