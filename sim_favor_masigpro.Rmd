@@ -37,7 +37,7 @@ trend4 <- append(notrend,map(notrend,~.*1))
 # trend3 <- append(notrend,notrend)
 # trend4 <- append(notrend,notrend)
 #trend4 <- append(tre3,tre3)
-ftrs_in_pat <- list(31,55-25)
+ftrs_in_pat <- list(31,55-31)
 pat_names <- list('one','flat')
 
 simulation <- create.simulation(pat_names.list = pat_names,ftrs_in_pat.list = ftrs_in_pat,replicates = rep,sd = sd,trend1,trend4)
