@@ -167,7 +167,7 @@ plot.submodels <- function(permut_wrapped,asca.fit, Fac=Fac, groups,size=10,...)
   output
 }
 
-plot_metabolites <- function(df,range,...){
+plot_metabolites <- function(df,range,formula = y~poly(x,2),...){
   df.final <- df
   df.toplot <- data.frame(t(df.final[range,]))
   df.toplot$time <- rep(rep(time,each=r),i)
@@ -180,7 +180,7 @@ plot_metabolites <- function(df,range,...){
     stat_summary(fun.y = mean,geom = 'line')+
     theme(legend.title = element_text(size = 5),panel.background = element_blank())+
     facet_wrap(metabolites~., scales = 'free')+
-    geom_smooth(method = 'lm', formula = y~poly(x,2),se = F,linetype = '3313')+
+    geom_smooth(method = 'lm', formula = formula,se = F,linetype = '3313')+
     labs(...)
   output
 }

@@ -148,10 +148,16 @@ dis <- design$dis
 edesign <- design$edesign
 colnames(df.final.masigpro) <- rownames(edesign)
 
-masigpro.fit <- maSigPro(df.final.masigpro,masigpro.design,degree=degree,rsq = 0.4)
-knitr::kable(masigpro.fit$summary)
-toplot <- rownames(masigpro.fit$sig.genes$treatment2vstreatment1$sig.profiles)
+masigpro.fit1 <- maSigPro(df.final.masigpro,masigpro.design,degree=degree,rsq = 0.8)
+knitr::kable(masigpro.fit1$summary)
+toplot <- rownames(masigpro.fit1$sig.genes$treatment2vstreatment1$sig.profiles)
 ```
+```{r}
+masigpro_coe <- masigpro.fit1$sig.genes$treatment2vstreatment1$coefficients
+kable(glimpse(head(masigpro_coe)))
+colnames(masigpro_coe) <- c('beta0','beta1','delta0','delta1','gamma0','gamma1')
+```
+
 
 ```{r asca}
 mx <- asca.design.matrix(i,j,r,time)
@@ -160,6 +166,7 @@ Fac=c(1,1,1,2)
 type=1
 source('ASCA-genes.1.2.1/sourceASCA.R')
 asca.fit <- ASCA.2f_leverage(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = type, Fac = Fac)
+asca.fit.split <- ASCA.2f_leverage(X = t(df.final.asca),Designa = mx$j, Designb = mx$i,type = 2, Fac = Fac)
 
 wrapped_info_favor_masigpro <- wrap.permutation.info(df.final = df.final.asca,asca.fit = asca.fit,groups = groups,R = 100,which_leverage = ASCA.2f_leverage,tag="B")
 sim_favor_masigpro <- wrapped_info_favor_masigpro$plots_for_submodel.leverage_spe

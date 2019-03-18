@@ -35,18 +35,13 @@ set.seed(999)
 # y32 <- fluctuate
 
 rep <- 4
-sd <- 0.6
-ctrl <- 0.01*time+0.1
-tre1 <- -0.01*time-0.1
-fluctuate <- list(1.5,1.5,1.5,1.5,1.5)
-notrend <- rep(list(0),5)
+sd <- 0.8
+fluctuate <- rep(list(5.8),5)
+notrend <- rep(list(5),5)
 ctrl <- notrend
-tre1 <- list(-1,-0.5,0,0.5,1)
 tre2 <- fluctuate
 
 trend1 <- append(ctrl,tre2)
-# trend2 <- append(ctrl,tre2)
-# trend3 <- append(ctrl,tre2)
 trend4 <- append(ctrl,ctrl)
 ftrs_in_pat <- list(31,55-31)
 pat_names <- list('one','flat')
@@ -138,29 +133,8 @@ plot(rep(1:6,2),ab[,1])
 warpped.info <- wrap.permutation.info(df.final = df.final,asca.fit = asca.fit,groups = groups,R = 100,which_leverage = ASCA.2f_leverage,tag='B')
 sim_favor_asca <- warpped.info$plots_for_submodel.leverage_spe
 plot(warpped.info$plots_for_submodel.leverage_spe)
-warpped.info$Null_distribution_plot
+#warpped.info$Null_distribution_plot
 ```
-
-With 2 PCs selected, 10 out of 12 differential expressed metabolites corrected identified, fall into right-bottom quadrant.
-
-```{r score plot}
-plot.submodels_score(asca.fit,i,j)
-```
-
-score plot of submodel b.ab shows a clear seperation between treatment1 and treatment2. 
-
-```{r loading plot}
-plot.submodels_loading(asca.fit,groups,size = 10)
-```
-
-```{r residual plot}
-# residuals <- asca.fit$Model.bab$data-(asca.fit$Model.bab$scores%*%t(asca.fit$Model.bab$loadings))
-# matplot(residuals[,leverages_spe[[2]]],type='l',col = 'red')
-# matplot(residuals[,-leverages_spe[[2]]],type = 'l',col = 'grey',add=T)
-```
-
-
-loading plot shows differentially expressed metabolites making high contribution in this pc.
 
 ```{r masigpro design matrix and fit,results=T}
 masigpro.design <- design_matrix(i,j,r,time)
@@ -168,12 +142,19 @@ design <- make.design.matrix(edesign = masigpro.design,degree = 2)
 edesign <- design$edesign
 colnames(df.final) <- rownames(edesign)
 
-masigpro.fit <- maSigPro(df.final,masigpro.design,degree=2,step.method = 'forward')
+masigpro.fit <- maSigPro(df.final,masigpro.design,degree=2,step.method = 'backward',rsq = 0)
 toplot <- rownames(masigpro.fit$summary)
-#kable(masigpro.fit$summary)
+kable(masigpro.fit$summary)
 ```
 
 However, masigpro could not identify any significant abnormal metabolites.
+
+```{r masigpro manual}
+fit.asca <- p.vector(data = df.final,design = masigpro.design)
+tstep.asca <- T.fit(data = fit.asca)
+```
+
+
 ```{r plot raw data metabolite2,eval=F}
 trend.toplot <- data.frame(replicate=rep(1:(i*j),each=r),time=rep(time,each=r),treatment=factor(rep(1:i,each=j*r)),metabolite=df.final[20,])
 ggplot(trend.toplot,aes(x=time,y=metabolite,color=treatment))+
